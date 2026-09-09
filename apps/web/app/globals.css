@@ -1,0 +1,11 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --brand: #7c3aed;
+}
+
+body {
+  @apply bg-gray-950 text-gray-100;
+}

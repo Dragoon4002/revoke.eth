@@ -187,11 +187,35 @@ Subgraph index health and sync status.
 
 ---
 
+## x402 Payment Flow (direct)
+
+No Blocky402 API key or endpoint. Payment verification is done by submitting `transferWithAuthorization` directly to the ERC-20 token contract (HBAR-wrapped or USDC on Hedera testnet).
+
+1. Client sends `GET /service/:endpoint`
+2. Server returns `402` with `PaymentRequirement` (token address, amount, payTo, chainId, deadline)
+3. Client signs EIP-712 `transferWithAuthorization` (ERC-3009)
+4. Client sends signed payload to `POST /pay` (or via `X-PAYMENT` header on retry)
+5. Server submits `transferWithAuthorization` on-chain against the ERC-20 contract
+6. Server writes HCS receipt to the configured Hedera topic
+7. Server returns `200` + `PaidRequestReceipt`
+
+**Env vars required:**
+```
+HEDERA_OPERATOR_ID=0.0.xxxxx
+HEDERA_OPERATOR_KEY=302e...
+HEDERA_TOPIC_ID=0.0.xxxxx
+ERC20_TOKEN_ADDRESS=0x...        # token contract on Hedera testnet (EVM address)
+SETTLER_ADDRESS=0x...            # server's receiving address (payTo)
+CHAIN_ID=296                     # Hedera testnet EVM chain ID
+```
+
+---
+
 ## Hedera Gated Service (Session 3 builds)
 
 Base URL: `http://localhost:5000` (dev). End-user facing.
 
-Session 3 is the `settler` on `CapabilityRegistry`. After x402 payment, Session 3 calls `settlePayment()` to anchor the HCS receipt on-chain.
+Session 3 is the `settler` on `CapabilityRegistry`. After direct x402 payment settlement, Session 3 calls `settlePayment()` to anchor the HCS receipt on-chain.
 
 ---
 

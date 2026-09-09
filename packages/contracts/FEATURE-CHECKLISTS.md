@@ -41,7 +41,8 @@ Contracts on Sepolia:
 - [ ] x402 gated endpoint live [HEDERA]
 - [ ] Authorization reads from subgraph not direct RPC [HEDERA, SECURITY]
 - [ ] Stale index → 403 not 402 [HEDERA, SECURITY]
-- [ ] Blocky402 round trip completes [HEDERA, DEMO-GATE]
+- [ ] x402 direct settlement round trip completes [HEDERA, DEMO-GATE]
+- [ ] EIP-712 transferWithAuthorization signature verified [HEDERA]
 - [ ] HCS receipt written after payment [HEDERA]
 - [ ] Revoked agent payment fails [HEDERA, DEMO-GATE]
 

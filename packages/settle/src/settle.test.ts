@@ -5,8 +5,12 @@
  * Flow: GET /service/:endpoint
  *   → check subgraph for capability (NOT direct Sepolia RPC)
  *   → stale index → 403 "index_stale"
- *   → no capability / revoked → 402 (Blocky402 Payment Required)
- *   → valid capability + payment → 200 + HCS receipt
+ *   → no capability / revoked → 402 (payment required)
+ *   → valid capability + EIP-712 transferWithAuthorization → 200 + HCS receipt
+ *
+ * Payment verification: direct x402 — no Blocky402.
+ * Server verifies EIP-712 signature, then calls transferWithAuthorization
+ * on the ERC-20 token contract (Hedera testnet).
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -51,19 +55,38 @@ vi.mock("@revoke/index", () => ({
 }));
 
 // ------------------------------------------------------------------
-// Mock Blocky402 payment verification
-// ponytail: stub the payment layer; real Blocky402 is an integration test
+// Mock direct x402 payment verification (EIP-712 transferWithAuthorization)
+// ponytail: stub the payment layer; real on-chain call is an integration test
 // ------------------------------------------------------------------
-const mockVerifyPayment = vi.fn();
+const mockVerifyEip712Signature = vi.fn();
+const mockTransferWithAuthorization = vi.fn();
 
-vi.mock("blocky402", () => ({
-  verifyPayment: mockVerifyPayment,
-  createPaymentRequired: vi.fn((amount: number, currency: string) => ({
+vi.mock("./x402.js", () => ({
+  // Verifies the EIP-712 signature off-chain before submitting on-chain
+  verifyEip712Signature: mockVerifyEip712Signature,
+  // Submits transferWithAuthorization to the ERC-20 contract on Hedera testnet
+  transferWithAuthorization: mockTransferWithAuthorization,
+  buildPaymentRequirement: vi.fn((amount: string, token: string) => ({
     status: 402,
-    headers: { "X-Payment-Required": `${amount} ${currency}` },
-    body: { error: "Payment required", amount, currency },
+    headers: { "X-Payment-Required": `${amount} ${token}` },
+    body: { error: "Payment required", amount, token },
   })),
 }));
+
+// Convenience wrapper — tests use mockVerifyPayment to keep assertions readable.
+// ponytail: thin alias so test bodies stay unchanged
+const mockVerifyPayment = {
+  mockResolvedValueOnce: (val: unknown) => {
+    if ((val as { valid: boolean }).valid) {
+      mockVerifyEip712Signature.mockResolvedValueOnce(true);
+      mockTransferWithAuthorization.mockResolvedValueOnce({
+        txHash: (val as { settlementTx?: string }).settlementTx ?? "0xtx",
+      });
+    } else {
+      mockVerifyEip712Signature.mockResolvedValueOnce(false);
+    }
+  },
+};
 
 // ------------------------------------------------------------------
 // Mock HCS writer
@@ -302,5 +325,28 @@ describe("Authorization reads from subgraph, not direct Sepolia RPC", () => {
     expect(mockQueryDelegation).toHaveBeenCalledWith("hank");
     // Ensure no viem publicClient is used — this is enforced structurally:
     // settle/src/index.ts must import from @revoke/index, not from viem
+  });
+});
+
+describe("x402 EIP-712 signature validation", () => {
+  it("returns 400 Bad Request for invalid EIP-712 signature", async () => {
+    mockGetProvenance.mockResolvedValueOnce(freshProvenance());
+    mockQueryDelegation.mockResolvedValueOnce(
+      agentWithCapability("ivan", "summarise")
+    );
+    // Bad signature: verifyEip712Signature rejects before on-chain call
+    mockVerifyEip712Signature.mockResolvedValueOnce(false);
+
+    const res = await handleRequest({
+      method: "GET",
+      path: "/service/summarise",
+      headers: { "X-Payment-Proof": "bad-signature-payload" },
+      agentName: "ivan",
+    });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe("invalid_signature");
+    // transferWithAuthorization must NOT be called on bad sig
+    expect(mockTransferWithAuthorization).not.toHaveBeenCalled();
   });
 });

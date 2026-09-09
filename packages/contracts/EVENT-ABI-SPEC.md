@@ -140,7 +140,7 @@ Topic 0: `keccak256("PaymentSettled(bytes32,bytes32,address,uint256,bytes32)")`
 | `amount` | `uint256` | no | payment amount in smallest unit |
 | `hcsReceiptHash` | `bytes32` | no | Hedera HCS topic message hash — provenance anchor |
 
-Emitted by: `settlePayment(...)` — callable only by `CapabilityRegistry.settler` (set by owner). Session 3 is the settler.
+Emitted by: `settlePayment(...)` — callable only by `CapabilityRegistry.settler` (set by owner). Session 3 is the settler, using direct x402 settlement (EIP-712 transferWithAuthorization / ERC-3009) — no Blocky402.
 
 Subgraph: create `PaymentReceipt` entity. Link to `Capability` by `(agentENSNode, serviceId)`. Store `hcsReceiptHash` as provenance link to HCS.
 

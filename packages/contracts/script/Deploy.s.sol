@@ -12,34 +12,23 @@ address constant UNIVERSAL_RESOLVER_V2 = 0x4A1817d13E9cF196f471725176355C1234b63
 
 contract Deploy is Script {
     function run() external {
-        uint256 deployerKey = vm.envUint("PRIVATE_KEY");
-        address deployer = vm.addr(deployerKey);
+        // Use msg.sender from --private-key flag, no env read needed
+        vm.startBroadcast();
 
-        console.log("Deployer:", deployer);
+        console.log("Deployer:", msg.sender);
         console.log("ETHRegistry:", ETH_REGISTRY);
 
-        vm.startBroadcast(deployerKey);
-
-        // 1. CapabilityRegistry (needs ETHRegistry to check live ownership)
         CapabilityRegistry capReg = new CapabilityRegistry(ETH_REGISTRY);
         console.log("CapabilityRegistry:", address(capReg));
 
-        // 2. AgentResolver (reads from CapabilityRegistry)
         AgentResolver resolver = new AgentResolver(address(capReg));
         console.log("AgentResolver:", address(resolver));
 
-        // 3. AgentRegistrar (wraps ETHRegistry, uses resolver as default)
         AgentRegistrar registrar = new AgentRegistrar(ETH_REGISTRY, address(resolver));
         console.log("AgentRegistrar:", address(registrar));
 
-        // Demo: register one agent subname for the revocation demo path
-        // NOTE: This only succeeds if deployer has ROLE_REGISTRAR on ETHRegistry.
-        // After deploy, run: cast send <ETH_REGISTRY> "grantRootRoles(uint256,address)" <ROLE_REGISTRAR|ROLE_RENEW|ROLE_UNREGISTER> <registrar>
-        // Then re-run this section or call registerAgent manually.
-
         vm.stopBroadcast();
 
-        // Print deployment JSON to stdout for capture into deployments/sepolia.json
         console.log("\n=== DEPLOYMENT ADDRESSES ===");
         console.log("{");
         console.log('  "chainId": 11155111,');
@@ -53,18 +42,18 @@ contract Deploy is Script {
 /// @notice Run after granting ROLE_REGISTRAR to AgentRegistrar on ETHRegistry.
 contract RegisterDemoAgent is Script {
     function run() external {
-        uint256 deployerKey = vm.envUint("PRIVATE_KEY");
         address registrarAddr = vm.envAddress("AGENT_REGISTRAR");
         address resolverAddr = vm.envAddress("AGENT_RESOLVER");
 
         AgentRegistrar registrar = AgentRegistrar(registrarAddr);
 
-        vm.startBroadcast(deployerKey);
+        vm.startBroadcast();
 
+        // forge-lint: disable-next-line(unsafe-typecast)
         uint64 expiry = uint64(block.timestamp + 30 days);
         uint256 tokenId = registrar.registerAgent(
             "demo-agent",
-            vm.addr(deployerKey),
+            msg.sender,
             resolverAddr,
             expiry
         );

@@ -9,7 +9,11 @@ Deliberate scope limits per session. Updated as build progresses.
 - On-chain payment verification (Session 3)
 
 ## packages/delegation (Session 1)
-_TBD_
+- `waitForTransactionReceipt` — impl returns tx hash from writeContract directly; no receipt polling
+- Multi-account wallet support — hardcoded to first account from getAddresses()
+- AgentRenewed flow — renewAgent() not implemented (no test coverage)
+- Retry/backoff on RPC failure — callers must handle
+- Zod boundary validation — skipped; viem types enforce structure at compile time
 
 ## packages/index (Session 2)
 _TBD_

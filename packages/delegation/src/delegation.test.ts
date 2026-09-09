@@ -38,67 +38,80 @@ interface RevokeCapabilityParams {
 }
 
 // ------------------------------------------------------------------
-// Viem mock — publicClient + walletClient
+// Shared mock state — tests mutate this to simulate on-chain state
+// ------------------------------------------------------------------
+// ponytail: hoisted so vi.mock factory can close over it
+const mockState = vi.hoisted(() => ({
+  agents: new Map<string, { endpoint: string; context: string }>(),
+  capabilities: new Map<string, { expiresAt: bigint; revoked: boolean }>(),
+  blockTimestamp: 1_000_000n,
+}));
+
+const capKey = vi.hoisted(() => (agentName: string, capability: string) => `${agentName}::${capability}`);
+
+// Mock implementations — Session 1 replaces with real viem calls
+const mockReadContract = vi.hoisted(() =>
+  vi.fn(async ({ functionName, args }: { functionName: string; args: unknown[] }) => {
+    if (functionName === "isCapabilityValid") {
+      const [agentName, cap] = args as [string, string];
+      const entry = mockState.capabilities.get(capKey(agentName, cap));
+      if (!entry || entry.revoked) return false;
+      return entry.expiresAt > mockState.blockTimestamp;
+    }
+    if (functionName === "getAgent") {
+      const [agentName] = args as [string];
+      return mockState.agents.get(agentName) ?? null;
+    }
+    return null;
+  })
+);
+
+const mockSimulateContract = vi.hoisted(() =>
+  vi.fn(async ({ functionName }: { functionName: string }) => ({
+    request: { functionName },
+  }))
+);
+
+const mockWriteContract = vi.hoisted(() =>
+  vi.fn(async ({ functionName, args }: { functionName: string; args: unknown[] }) => {
+    if (functionName === "registerAgent") {
+      const [agentName, endpoint, context] = args as [string, string, string];
+      mockState.agents.set(agentName, { endpoint, context });
+      return "0xdeadbeef" as `0x${string}`;
+    }
+    if (functionName === "grantCapability") {
+      const [agentName, cap, expiresAt] = args as [string, string, bigint];
+      mockState.capabilities.set(capKey(agentName, cap), { expiresAt, revoked: false });
+      return "0xdeadbeef" as `0x${string}`;
+    }
+    if (functionName === "revokeCapability") {
+      const [agentName, cap] = args as [string, string];
+      const entry = mockState.capabilities.get(capKey(agentName, cap));
+      if (entry) entry.revoked = true;
+      return "0xdeadbeef" as `0x${string}`;
+    }
+    return "0xdeadbeef" as `0x${string}`;
+  })
+);
+
+// ------------------------------------------------------------------
+// Viem mock — publicClient + walletClient wired to mock handlers
 // ------------------------------------------------------------------
 vi.mock("viem", () => ({
-  createPublicClient: vi.fn(),
-  createWalletClient: vi.fn(),
+  createPublicClient: vi.fn(() => ({
+    readContract: mockReadContract,
+    simulateContract: mockSimulateContract,
+  })),
+  createWalletClient: vi.fn(() => ({
+    getAddresses: vi.fn(async () => ["0xdeadbeef"] as const),
+    writeContract: mockWriteContract,
+  })),
   http: vi.fn(),
 }));
 
 vi.mock("viem/chains", () => ({
   sepolia: { id: 11155111 },
 }));
-
-// Shared mock state — tests mutate this to simulate on-chain state
-const mockState = {
-  agents: new Map<string, { endpoint: string; context: string }>(),
-  capabilities: new Map<string, { expiresAt: bigint; revoked: boolean }>(),
-  blockTimestamp: 1_000_000n,
-};
-
-function capKey(agentName: string, capability: string) {
-  return `${agentName}::${capability}`;
-}
-
-// Mock implementations — Session 1 replaces with real viem calls
-const mockReadContract = vi.fn(async ({ functionName, args }: { functionName: string; args: unknown[] }) => {
-  if (functionName === "isCapabilityValid") {
-    const [agentName, cap] = args as [string, string];
-    const entry = mockState.capabilities.get(capKey(agentName, cap));
-    if (!entry || entry.revoked) return false;
-    return entry.expiresAt > mockState.blockTimestamp;
-  }
-  if (functionName === "getAgent") {
-    const [agentName] = args as [string];
-    return mockState.agents.get(agentName) ?? null;
-  }
-  return null;
-});
-
-const mockSimulateContract = vi.fn(async ({ functionName }: { functionName: string }) => ({
-  request: { functionName },
-}));
-
-const mockWriteContract = vi.fn(async ({ functionName, args }: { functionName: string; args: unknown[] }) => {
-  if (functionName === "registerAgent") {
-    const [agentName, endpoint, context] = args as [string, string, string];
-    mockState.agents.set(agentName, { endpoint, context });
-    return "0xdeadbeef" as `0x${string}`;
-  }
-  if (functionName === "grantCapability") {
-    const [agentName, cap, expiresAt] = args as [string, string, bigint];
-    mockState.capabilities.set(capKey(agentName, cap), { expiresAt, revoked: false });
-    return "0xdeadbeef" as `0x${string}`;
-  }
-  if (functionName === "revokeCapability") {
-    const [agentName, cap] = args as [string, string];
-    const entry = mockState.capabilities.get(capKey(agentName, cap));
-    if (entry) entry.revoked = true;
-    return "0xdeadbeef" as `0x${string}`;
-  }
-  return "0xdeadbeef" as `0x${string}`;
-});
 
 const mockWaitForReceipt = vi.fn(async ({ hash }: { hash: string }) => ({
   transactionHash: hash,

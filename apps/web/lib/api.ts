@@ -94,11 +94,25 @@ export type PaymentRequirement402 = {
   deadline: number;
 };
 
+// Tracks revoked agents in fixture mode — keyed by `${agentName}:${endpoint}`
+const fixtureRevokedSet = new Set<string>();
+
+export function fixtureMarkRevoked(agentName: string, endpoint: string) {
+  fixtureRevokedSet.add(`${agentName}:${endpoint}`);
+}
+
+export function fixtureReset() {
+  fixtureRevokedSet.clear();
+}
+
 export async function fetchServiceEndpoint(
   endpoint: string,
   agentName: string
 ): Promise<{ status: 200; data: unknown; receipt: typeof sampleReceipt } | { status: 402; requirement: PaymentRequirement402 }> {
   if (USE_FIXTURES) {
+    if (fixtureRevokedSet.has(`${agentName}:${endpoint}`)) {
+      throw new Error("403 capability_required: capability revoked");
+    }
     return { status: 402, requirement: {
       requestId: "00000000-0000-0000-0000-000000000001",
       agentName,

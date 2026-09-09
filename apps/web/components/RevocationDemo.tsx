@@ -5,7 +5,7 @@ import { useAccount, useSignTypedData, useWriteContract, useWaitForTransactionRe
 import { keccak256, toBytes, namehash } from "viem";
 import type { PaidRequestReceipt } from "@revoke/contracts/src/types/index";
 import { ADDRESSES, CAPABILITY_REGISTRY_ABI } from "@/lib/contracts";
-import { fetchServiceEndpoint, submitPayment, type PaymentRequirement402, USE_FIXTURES } from "@/lib/api";
+import { fetchServiceEndpoint, submitPayment, fixtureMarkRevoked, fixtureReset, type PaymentRequirement402, USE_FIXTURES } from "@/lib/api";
 
 const DEMO_AGENT = "alpha.agents.revoke.eth";
 const DEMO_CAPABILITY = "data-query";
@@ -40,6 +40,11 @@ export function RevocationDemo() {
     if (result.status === 200) return result.receipt;
 
     const requirement = result.requirement;
+
+    // In fixture mode skip real signing — submitPayment ignores the payload anyway
+    if (USE_FIXTURES) {
+      return submitPayment(DEMO_ENDPOINT, DEMO_AGENT, "fixture");
+    }
 
     const signature = await signTypedDataAsync({
       domain: {
@@ -91,6 +96,12 @@ export function RevocationDemo() {
   async function step2_revoke() {
     setState((s) => ({ ...s, phase: "step2_revoking" }));
     try {
+      if (USE_FIXTURES) {
+        await new Promise((r) => setTimeout(r, 600));
+        fixtureMarkRevoked(DEMO_AGENT, DEMO_ENDPOINT);
+        setState((s) => ({ ...s, phase: "step2_done", revokeTx: "fixture-revoke" }));
+        return;
+      }
       const agentNode = namehash(DEMO_AGENT);
       const serviceId = keccak256(toBytes(DEMO_CAPABILITY));
       const hash = await writeContractAsync({
@@ -146,6 +157,7 @@ export function RevocationDemo() {
   }
 
   function reset() {
+    fixtureReset();
     setState({ phase: "ready" });
   }
 
@@ -193,14 +205,18 @@ export function RevocationDemo() {
             "waiting"
           }
           extra={state.revokeTx ? (
-            <a
-              href={`https://sepolia.etherscan.io/tx/${state.revokeTx}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xs text-violet-400 underline"
-            >
-              tx: {state.revokeTx.slice(0, 14)}…
-            </a>
+            state.revokeTx === "fixture-revoke" ? (
+              <span className="text-xs text-yellow-400">fixture: revoked in-memory</span>
+            ) : (
+              <a
+                href={`https://sepolia.etherscan.io/tx/${state.revokeTx}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-violet-400 underline"
+              >
+                tx: {state.revokeTx.slice(0, 14)}…
+              </a>
+            )
           ) : null}
         >
           {phase === "step1_done" && (

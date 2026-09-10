@@ -96,6 +96,9 @@ importers:
       node-fetch:
         specifier: ^3.3.2
         version: 3.3.2
+      viem:
+        specifier: ^2.0.0
+        version: 2.56.3(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.5.4)
       zod:
         specifier: ^4.5.4
         version: 4.5.4

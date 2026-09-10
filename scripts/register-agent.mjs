@@ -2,9 +2,9 @@ import { createPublicClient, createWalletClient, http, keccak256, toBytes } from
 import { privateKeyToAccount } from "viem/accounts";
 import { sepolia } from "viem/chains";
 
-const AGENT_REGISTRAR     = "0x2A9caFEDFc91d55E00B6d1514E39BeB940832b5D";
-const CAPABILITY_REGISTRY = "0x70a15Db526104abC2f021b7c690cd89a07EDE49C";
-const AGENT_RESOLVER      = "0xeeb56334152D6bDB62aacF56f8DbCceA5210b78D";
+const AGENT_REGISTRAR     = "0x94CC95937aD2d1Fc8e7D46500553443732049b37";
+const CAPABILITY_REGISTRY = "0xE2867033aa5963a838c85aC2aE3A9452B715750d";
+const AGENT_RESOLVER      = "0x9cB3881E62B5C9e55DAde607d5FC93F6bB719150";
 
 const REGISTRAR_ABI = [
   {
@@ -37,7 +37,8 @@ const CAPABILITY_ABI = [
 ];
 
 const rpcUrl     = process.env.SEPOLIA_RPC_URL;
-const privateKey = `0x${process.env.PRIVATE_KEY}`;
+const rawKey = process.env.PRIVATE_KEY?.trim() ?? "";
+const privateKey = (rawKey.startsWith("0x") ? rawKey : `0x${rawKey}`);
 
 if (!rpcUrl || !process.env.PRIVATE_KEY) {
   console.error("SEPOLIA_RPC_URL and PRIVATE_KEY must be set");

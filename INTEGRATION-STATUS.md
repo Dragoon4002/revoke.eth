@@ -15,11 +15,13 @@ Updated: 2026-09-10
 
 ## Gate 1 — Revocation demo (Sepolia)
 
-✅ All unit tests pass (mock Sepolia RPC via vitest vi.mock("viem"))
+✅ All unit tests pass
+✅ `registerAgent` confirmed on Sepolia (AgentRegistrar → UserRegistry)
+✅ `grantCapability` confirmed — `summarise` capability granted to `alpha`
+✅ `revokeCapability` confirmed — subgraph shows `revoked: true`
+✅ `/delegation/alpha.eth` returns live capability with `revoked: true`
 
-❌ **Live Sepolia not verified** — `SEPOLIA_RPC_URL` and `PRIVATE_KEY` not set in `.env`. Cannot run `registerAgent` → `grantCapability` → `isCapabilityValid` → `revokeCapability` → `isCapabilityValid` against real chain without keys.
-
-**To complete Gate 1:** set `PRIVATE_KEY` and `SEPOLIA_RPC_URL` in `.env`, then run the integration script (none written yet — see `packages/integration/` below).
+Scripts: `scripts/register-agent.mjs`, `scripts/revoke-capability.mjs`
 
 ---
 
@@ -42,16 +44,10 @@ Updated: 2026-09-10
 
 ## Gate 3 — Live indexed Sepolia data in UI
 
-❌ **Subgraph not deployed** (blocks this gate)
-
-❌ **UI running in fixture mode** — `NEXT_PUBLIC_GRAPH_QUERY_URL` not set → `USE_FIXTURES=true` in `apps/web/lib/api.ts`
-
-**To complete Gate 3:**
-1. Complete Gate 2 subgraph deploy
-2. Set `NEXT_PUBLIC_GRAPH_QUERY_URL=http://localhost:4000` in `apps/web/.env.local`
-3. Set `NEXT_PUBLIC_SETTLE_URL=http://localhost:5000` in `apps/web/.env.local`
-4. Verify `/delegation/:agentName` returns live `AgentDelegation` + `ProvenanceEnvelope`
-5. Verify UI `fetchDelegation` and `checkAuthorization` hit live endpoints
+✅ Subgraph v0.0.2 deployed — new contract addresses, startBlock 11676355
+✅ UI in live mode — `NEXT_PUBLIC_GRAPH_QUERY_URL=http://localhost:4000` set
+✅ `/delegation/alpha.eth` returns live `AgentDelegation` + capabilities
+✅ `INDEX FRESH` shown in UI with real block numbers
 
 ---
 

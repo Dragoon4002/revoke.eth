@@ -8,9 +8,9 @@ dataSources:
     name: AgentRegistrar
     network: sepolia
     source:
-      address: "0x2A9caFEDFc91d55E00B6d1514E39BeB940832b5D"
+      address: "0x94CC95937aD2d1Fc8e7D46500553443732049b37"
       abi: AgentRegistrar
-      startBlock: 7000000
+      startBlock: 11676355
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -32,9 +32,9 @@ dataSources:
     name: CapabilityRegistry
     network: sepolia
     source:
-      address: "0x70a15Db526104abC2f021b7c690cd89a07EDE49C"
+      address: "0xE2867033aa5963a838c85aC2aE3A9452B715750d"
       abi: CapabilityRegistry
-      startBlock: 7000000
+      startBlock: 11676355
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7

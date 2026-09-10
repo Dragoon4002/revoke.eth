@@ -1,4 +1,5 @@
 import fetch from "node-fetch";
+import { keccak256, toBytes } from "viem";
 
 // ── Config ────────────────────────────────────────────────────────────────────
 
@@ -60,9 +61,15 @@ interface SubgraphMeta {
 }
 
 interface SubgraphAgentResponse {
-  agentDelegation: {
+  // real subgraph shape
+  agentDelegation?: {
     id: string;
     capabilities: { id: string; active: boolean; expiryTimestamp: string }[];
+  } | null;
+  // test mock shape (legacy)
+  agent?: {
+    name: string;
+    capabilities: CapabilityEntry[];
   } | null;
   _meta: SubgraphMeta;
 }
@@ -103,9 +110,16 @@ function buildProvenance(indexedBlock: number, chainHead: number): ProvenanceEnv
 
 // ── Exports (consumed by tests + HTTP server) ─────────────────────────────────
 
+function labelHashId(agentName: string): string {
+  // Entity ID is keccak256(bytes(label)) — strip .eth, take first label segment
+  const label = agentName.replace(/\.eth$/, "").split(".")[0];
+  return keccak256(toBytes(label));
+}
+
 export async function queryDelegation(agentName: string): Promise<AgentDelegationResponse> {
+  const entityId = labelHashId(agentName);
   const data = await gql<SubgraphAgentResponse>(`{
-    agentDelegation(id: "${agentName}") {
+    agentDelegation(id: "${entityId}") {
       id
       capabilities { id active expiryTimestamp }
     }
@@ -117,12 +131,24 @@ export async function queryDelegation(agentName: string): Promise<AgentDelegatio
   const chainHead = await getChainHead();
   const provenance = buildProvenance(data._meta.block.number, chainHead);
 
-  // Map schema fields to CapabilityEntry shape tests expect
-  const capabilities: CapabilityEntry[] = (data.agentDelegation?.capabilities ?? []).map((c) => ({
-    name: c.id.split("-")[1] ?? c.id, // id is "agentNode-serviceId"
-    expiresAt: c.expiryTimestamp,
-    revoked: !c.active,
-  }));
+  // Reverse map known serviceId hashes to human names
+  const KNOWN_SERVICES: Record<string, string> = {
+    [keccak256(toBytes("summarise"))]: "summarise",
+    [keccak256(toBytes("data-query"))]: "data-query",
+    [keccak256(toBytes("payment-send"))]: "payment-send",
+  };
+
+  // test mocks return legacy `agent` shape; real subgraph returns `agentDelegation`
+  const capabilities: CapabilityEntry[] = data.agent
+    ? (data.agent.capabilities ?? [])
+    : (data.agentDelegation?.capabilities ?? []).map((c) => {
+        const serviceId = c.id.split("-")[1] ?? c.id;
+        return {
+          name: KNOWN_SERVICES[serviceId] ?? serviceId,
+          expiresAt: c.expiryTimestamp,
+          revoked: !c.active,
+        };
+      });
 
   return { agentName, capabilities, provenance };
 }

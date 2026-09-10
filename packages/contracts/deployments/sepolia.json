@@ -3,7 +3,7 @@
   "deployer": "0xbEff58504eB09E3Bb3edC68e81250c71D3f8c0f5",
   "CapabilityRegistry": "0xE2867033aa5963a838c85aC2aE3A9452B715750d",
   "AgentResolver": "0x9cB3881E62B5C9e55DAde607d5FC93F6bB719150",
-  "AgentRegistrar": "0x2A9caFEDFc91d55E00B6d1514E39BeB940832b5D",
+  "AgentRegistrar": "0x94CC95937aD2d1Fc8e7D46500553443732049b37",
   "UserRegistry": "0x2fa51338abfD65f58483a5bffe4D270C6748474b",
   "ENSv2": {
     "ETHRegistry": "0xBDC85dD5b15D7ecb354cd7cb6f2c50b4f2c4F0E2",

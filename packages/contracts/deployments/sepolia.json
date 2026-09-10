@@ -4,6 +4,7 @@
   "CapabilityRegistry": "0x70a15Db526104abC2f021b7c690cd89a07EDE49C",
   "AgentResolver": "0xeeb56334152D6bDB62aacF56f8DbCceA5210b78D",
   "AgentRegistrar": "0x2A9caFEDFc91d55E00B6d1514E39BeB940832b5D",
+  "UserRegistry": "0x2fa51338abfD65f58483a5bffe4D270C6748474b",
   "ENSv2": {
     "ETHRegistry": "0xBDC85dD5b15D7ecb354cd7cb6f2c50b4f2c4F0E2",
     "UniversalResolverV2": "0x4A1817d13E9cF196f471725176355C1234b63C70"

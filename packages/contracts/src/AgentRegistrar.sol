@@ -7,7 +7,8 @@ import {RegistryRolesLib} from "@ensdomains/contracts-v2/registry/libraries/Regi
 import {IRegistry} from "@ensdomains/contracts-v2/registry/interfaces/IRegistry.sol";
 
 /// @notice Registrar for agent subnames. Sits in front of ETHRegistry (Permissioned Registry).
-/// @dev Registry owner must call ethRegistry.grantRootRoles(ROLE_REGISTRAR | ROLE_RENEW | ROLE_UNREGISTER, address(this))
+/// @dev Deploy a UserRegistry proxy via VerifiableFactory, then call userRegistry.grantRootRoles(ROLE_REGISTRAR | ROLE_RENEW | ROLE_UNREGISTER, address(this)).
+///      Pass the UserRegistry proxy address as _ethRegistry. See script/DeployUserRegistry.s.sol.
 contract AgentRegistrar is IAgentRegistrar {
     IPermissionedRegistry public immutable ethRegistry;
     address public immutable defaultResolver;

@@ -2,10 +2,28 @@
   "name": "@revoke/settle",
   "version": "0.1.0",
   "type": "module",
+  "main": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
   "scripts": {
-    "test": "vitest run"
+    "test": "vitest run",
+    "dev": "node --env-file=../../.env --import tsx/esm src/server.ts"
+  },
+  "dependencies": {
+    "@hashgraph/sdk": "^2.81.0",
+    "@hono/node-server": "^1.12.0",
+    "hono": "^4.4.0",
+    "viem": "^2.18.0",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@types/node": "^20.0.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.4.0",
     "vitest": "^2.0.0"
+  },
+  "peerDependencies": {
+    "@revoke/index": "workspace:*"
   }
 }

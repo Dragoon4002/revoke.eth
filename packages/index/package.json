@@ -2,10 +2,29 @@
   "name": "@revoke/index",
   "version": "0.1.0",
   "type": "module",
+  "main": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
   "scripts": {
-    "test": "vitest run"
+    "test": "vitest run",
+    "dev": "node --env-file=../../.env --import tsx/esm src/server.ts",
+    "mcp": "node --import tsx/esm src/mcp.ts",
+    "subgraph:codegen": "cd subgraph && node_modules/.bin/graph codegen",
+    "subgraph:build": "cd subgraph && node_modules/.bin/graph build",
+    "subgraph:deploy": "cd subgraph && node_modules/.bin/graph deploy revoke-ens --deploy-key $GRAPH_DEPLOY_KEY --node https://api.studio.thegraph.com/deploy/ --ipfs https://api.thegraph.com/ipfs/api/v0 -l v0.0.1"
   },
   "devDependencies": {
+    "@types/node": "^20.0.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.4.0",
     "vitest": "^2.0.0"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.12.0",
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "hono": "^4.4.0",
+    "node-fetch": "^3.3.2",
+    "zod": "^4.5.4"
   }
 }

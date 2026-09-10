@@ -1,0 +1,32 @@
+type AgentDelegation @entity(immutable: false) {
+  id: ID!                        # labelHash (bytes32 hex)
+  labelHash: Bytes!
+  owner: Bytes!                  # address
+  expiry: BigInt!                # uint64 unix timestamp
+  tokenId: BigInt!               # ERC-1155 token ID
+  active: Boolean!               # false after AgentRevoked
+  revokedAt: BigInt              # null until revoked
+  registeredAt: BigInt!          # block.timestamp of AgentRegistered
+  capabilities: [Capability!]! @derivedFrom(field: "agent")
+}
+
+type Capability @entity(immutable: false) {
+  id: ID!                        # agentENSNode-serviceId
+  agent: AgentDelegation!
+  serviceId: Bytes!
+  grantor: Bytes!
+  expiryTimestamp: BigInt!
+  active: Boolean!               # false after CapabilityRevoked
+  revokedAt: BigInt
+  metadataURI: String!
+  payments: [PaymentReceipt!]! @derivedFrom(field: "capability")
+}
+
+type PaymentReceipt @entity(immutable: false) {
+  id: ID!                        # txHash-logIndex
+  capability: Capability!
+  payer: Bytes!
+  amount: BigInt!
+  hcsReceiptHash: Bytes!
+  settledAt: BigInt!             # block.timestamp
+}

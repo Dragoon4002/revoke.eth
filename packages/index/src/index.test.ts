@@ -49,18 +49,20 @@ interface IndexHealth {
 }
 
 // ------------------------------------------------------------------
-// Mock the subgraph HTTP endpoint
+// Mock the subgraph HTTP endpoint and Sepolia RPC
 // ------------------------------------------------------------------
 const mockSubgraphResponse = vi.fn();
+const mockChainHead = vi.fn();
 
 vi.mock("node-fetch", () => ({
-  default: vi.fn(async (_url: string, opts: { body: string }) => {
-    const body = JSON.parse(opts.body) as { query: string };
+  default: vi.fn(async (url: string, opts: { body: string }) => {
+    const body = JSON.parse(opts.body) as { query?: string; method?: string };
+    if (body.method === "eth_blockNumber") {
+      const head = await mockChainHead();
+      return { ok: true, json: async () => ({ result: `0x${head.toString(16)}` }) };
+    }
     const data = await mockSubgraphResponse(body.query);
-    return {
-      ok: true,
-      json: async () => ({ data }),
-    };
+    return { ok: true, json: async () => ({ data }) };
   }),
 }));
 
@@ -100,6 +102,7 @@ beforeEach(async () => {
 
 describe("Subgraph query — AgentDelegation + ProvenanceEnvelope", () => {
   it("returns delegation data with provenance for a known agent", async () => {
+    mockChainHead.mockResolvedValueOnce(6_000_002); // lag = 0, fresh
     mockSubgraphResponse.mockResolvedValueOnce({
       agent: {
         name: "alice",
@@ -124,6 +127,7 @@ describe("Subgraph query — AgentDelegation + ProvenanceEnvelope", () => {
   });
 
   it("returns empty capabilities array for unknown agent (not null)", async () => {
+    mockChainHead.mockResolvedValueOnce(6_000_002);
     mockSubgraphResponse.mockResolvedValueOnce({
       agent: null,
       _meta: { block: { number: 6_000_002 }, hasIndexingErrors: false },
@@ -134,6 +138,7 @@ describe("Subgraph query — AgentDelegation + ProvenanceEnvelope", () => {
   });
 
   it("provenance.verdict is 'fresh' when lagBlocks <= 100", async () => {
+    mockChainHead.mockResolvedValueOnce(6_000_100); // lag = 50, fresh
     mockSubgraphResponse.mockResolvedValueOnce({
       agent: { name: "bob", capabilities: [] },
       _meta: { block: { number: 6_000_050 }, hasIndexingErrors: false },
@@ -145,9 +150,9 @@ describe("Subgraph query — AgentDelegation + ProvenanceEnvelope", () => {
   });
 
   it("provenance.verdict is 'stale' when lagBlocks > 100", async () => {
+    mockChainHead.mockResolvedValueOnce(6_000_000); // lag = 200, stale
     mockSubgraphResponse.mockResolvedValueOnce({
       agent: { name: "carol", capabilities: [] },
-      // Simulate subgraph lagging far behind chain head
       _meta: { block: { number: 5_999_800 }, hasIndexingErrors: false },
     });
 
@@ -159,6 +164,7 @@ describe("Subgraph query — AgentDelegation + ProvenanceEnvelope", () => {
 
 describe("Freshness gate — stale index causes service refusal", () => {
   it("stale verdict causes queryDelegation to throw or return error indicator", async () => {
+    mockChainHead.mockResolvedValueOnce(6_000_000); // lag = 200, stale
     mockSubgraphResponse.mockResolvedValueOnce({
       agent: { name: "dave", capabilities: [{ name: "read:data", expiresAt: "9999999999", revoked: false }] },
       _meta: { block: { number: 5_999_800 }, hasIndexingErrors: false },
@@ -183,6 +189,7 @@ describe("Freshness gate — stale index causes service refusal", () => {
 
 describe("MCP tool — check_capability", () => {
   it("returns authorized=true for valid capability", async () => {
+    mockChainHead.mockResolvedValueOnce(6_000_002);
     mockSubgraphResponse.mockResolvedValueOnce({
       agent: {
         name: "eve",
@@ -202,6 +209,7 @@ describe("MCP tool — check_capability", () => {
   });
 
   it("returns authorized=false for revoked capability", async () => {
+    mockChainHead.mockResolvedValueOnce(6_000_002);
     mockSubgraphResponse.mockResolvedValueOnce({
       agent: {
         name: "frank",
@@ -218,6 +226,7 @@ describe("MCP tool — check_capability", () => {
   });
 
   it("returns authorized=false for expired capability", async () => {
+    mockChainHead.mockResolvedValueOnce(6_000_002);
     mockSubgraphResponse.mockResolvedValueOnce({
       agent: {
         name: "grace",
@@ -234,6 +243,7 @@ describe("MCP tool — check_capability", () => {
   });
 
   it("returns authorized=false with stale provenance warning", async () => {
+    mockChainHead.mockResolvedValueOnce(6_000_000); // lag = 200, stale
     mockSubgraphResponse.mockResolvedValueOnce({
       agent: {
         name: "hank",
@@ -252,6 +262,7 @@ describe("MCP tool — check_capability", () => {
 
 describe("MCP tool — get_provenance", () => {
   it("returns current index health with lagBlocks and verdict", async () => {
+    mockChainHead.mockResolvedValueOnce(6_000_002);
     mockSubgraphResponse.mockResolvedValueOnce({
       _meta: { block: { number: 6_000_002 }, hasIndexingErrors: false },
     });
@@ -263,9 +274,11 @@ describe("MCP tool — get_provenance", () => {
     expect(typeof health.subgraphId).toBe("string");
     expect(typeof health.lastIndexedBlock).toBe("number");
     expect(typeof health.chainHeadBlock).toBe("number");
+    expect(health.chainHeadBlock).toBe(6_000_002); // real fetched value, not maxSeenBlock
   });
 
   it("verdict is stale when lagBlocks > 100", async () => {
+    mockChainHead.mockResolvedValueOnce(6_000_000); // lag = 200, stale
     mockSubgraphResponse.mockResolvedValueOnce({
       _meta: { block: { number: 5_999_800 }, hasIndexingErrors: false },
     });
@@ -273,5 +286,6 @@ describe("MCP tool — get_provenance", () => {
     const health = await getProvenanceTool();
     expect(health.verdict).toBe("stale");
     expect(health.lagBlocks).toBeGreaterThan(100);
+    expect(health.chainHeadBlock).toBe(6_000_000);
   });
 });

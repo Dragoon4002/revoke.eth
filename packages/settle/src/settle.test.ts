@@ -186,9 +186,6 @@ describe("GET /service/:endpoint — stale index gate", () => {
   it("returns 403 (not 402) with reason 'index_stale' when lagBlocks > 100", async () => {
     mockGetProvenance.mockResolvedValueOnce(freshProvenance(150)); // stale
     // ponytail: stale check runs BEFORE subgraph query — no delegation lookup needed
-    mockQueryDelegation.mockResolvedValueOnce(
-      agentWithCapability("carol", "summarise")
-    );
 
     const res = await handleRequest({
       method: "GET",

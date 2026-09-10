@@ -1,0 +1,63 @@
+[
+  {
+    "type": "event",
+    "name": "AgentRegistered",
+    "anonymous": false,
+    "inputs": [
+      {
+        "name": "labelHash",
+        "type": "bytes32",
+        "indexed": true
+      },
+      {
+        "name": "owner",
+        "type": "address",
+        "indexed": true
+      },
+      {
+        "name": "expiry",
+        "type": "uint64",
+        "indexed": false
+      },
+      {
+        "name": "tokenId",
+        "type": "uint256",
+        "indexed": false
+      }
+    ]
+  },
+  {
+    "type": "event",
+    "name": "AgentRevoked",
+    "anonymous": false,
+    "inputs": [
+      {
+        "name": "labelHash",
+        "type": "bytes32",
+        "indexed": true
+      },
+      {
+        "name": "revokedAt",
+        "type": "uint64",
+        "indexed": false
+      }
+    ]
+  },
+  {
+    "type": "event",
+    "name": "AgentRenewed",
+    "anonymous": false,
+    "inputs": [
+      {
+        "name": "labelHash",
+        "type": "bytes32",
+        "indexed": true
+      },
+      {
+        "name": "newExpiry",
+        "type": "uint64",
+        "indexed": false
+      }
+    ]
+  }
+]

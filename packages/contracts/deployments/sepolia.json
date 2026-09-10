@@ -1,8 +1,8 @@
 {
   "chainId": 11155111,
   "deployer": "0xbEff58504eB09E3Bb3edC68e81250c71D3f8c0f5",
-  "CapabilityRegistry": "0x70a15Db526104abC2f021b7c690cd89a07EDE49C",
-  "AgentResolver": "0xeeb56334152D6bDB62aacF56f8DbCceA5210b78D",
+  "CapabilityRegistry": "0xE2867033aa5963a838c85aC2aE3A9452B715750d",
+  "AgentResolver": "0x9cB3881E62B5C9e55DAde607d5FC93F6bB719150",
   "AgentRegistrar": "0x2A9caFEDFc91d55E00B6d1514E39BeB940832b5D",
   "UserRegistry": "0x2fa51338abfD65f58483a5bffe4D270C6748474b",
   "ENSv2": {

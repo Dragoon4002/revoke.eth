@@ -1,0 +1,93 @@
+[
+  {
+    "type": "event",
+    "name": "CapabilityGranted",
+    "anonymous": false,
+    "inputs": [
+      {
+        "name": "agentENSNode",
+        "type": "bytes32",
+        "indexed": true
+      },
+      {
+        "name": "serviceId",
+        "type": "bytes32",
+        "indexed": true
+      },
+      {
+        "name": "grantor",
+        "type": "address",
+        "indexed": true
+      },
+      {
+        "name": "expiryTimestamp",
+        "type": "uint256",
+        "indexed": false
+      },
+      {
+        "name": "metadataURI",
+        "type": "string",
+        "indexed": false
+      }
+    ]
+  },
+  {
+    "type": "event",
+    "name": "CapabilityRevoked",
+    "anonymous": false,
+    "inputs": [
+      {
+        "name": "agentENSNode",
+        "type": "bytes32",
+        "indexed": true
+      },
+      {
+        "name": "serviceId",
+        "type": "bytes32",
+        "indexed": true
+      },
+      {
+        "name": "revoker",
+        "type": "address",
+        "indexed": true
+      },
+      {
+        "name": "revokedAt",
+        "type": "uint256",
+        "indexed": false
+      }
+    ]
+  },
+  {
+    "type": "event",
+    "name": "PaymentSettled",
+    "anonymous": false,
+    "inputs": [
+      {
+        "name": "agentENSNode",
+        "type": "bytes32",
+        "indexed": true
+      },
+      {
+        "name": "serviceId",
+        "type": "bytes32",
+        "indexed": true
+      },
+      {
+        "name": "payer",
+        "type": "address",
+        "indexed": true
+      },
+      {
+        "name": "amount",
+        "type": "uint256",
+        "indexed": false
+      },
+      {
+        "name": "hcsReceiptHash",
+        "type": "bytes32",
+        "indexed": false
+      }
+    ]
+  }
+]

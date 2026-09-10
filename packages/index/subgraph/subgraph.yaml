@@ -1,0 +1,55 @@
+specVersion: 1.0.0
+indexerHints:
+  prune: auto
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum
+    name: AgentRegistrar
+    network: sepolia
+    source:
+      address: "0x2A9caFEDFc91d55E00B6d1514E39BeB940832b5D"
+      abi: AgentRegistrar
+      startBlock: 7000000
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - AgentDelegation
+      abis:
+        - name: AgentRegistrar
+          file: ./abis/AgentRegistrar.json
+      eventHandlers:
+        - event: AgentRegistered(indexed bytes32,indexed address,uint64,uint256)
+          handler: handleAgentRegistered
+        - event: AgentRevoked(indexed bytes32,uint64)
+          handler: handleAgentRevoked
+        - event: AgentRenewed(indexed bytes32,uint64)
+          handler: handleAgentRenewed
+      file: ./src/mappings.ts
+  - kind: ethereum
+    name: CapabilityRegistry
+    network: sepolia
+    source:
+      address: "0x70a15Db526104abC2f021b7c690cd89a07EDE49C"
+      abi: CapabilityRegistry
+      startBlock: 7000000
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Capability
+        - PaymentReceipt
+      abis:
+        - name: CapabilityRegistry
+          file: ./abis/CapabilityRegistry.json
+      eventHandlers:
+        - event: CapabilityGranted(indexed bytes32,indexed bytes32,indexed address,uint256,string)
+          handler: handleCapabilityGranted
+        - event: CapabilityRevoked(indexed bytes32,indexed bytes32,indexed address,uint256)
+          handler: handleCapabilityRevoked
+        - event: PaymentSettled(indexed bytes32,indexed bytes32,indexed address,uint256,bytes32)
+          handler: handlePaymentSettled
+      file: ./src/mappings.ts

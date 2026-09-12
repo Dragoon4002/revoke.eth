@@ -17,6 +17,13 @@ Features deliberately omitted (YAGNI for hackathon scope):
   Not built: requires Sepolia private key and viem wallet client wired up.
   Add when live demo needs the on-chain anchor.
 
+## Automated test coverage for the real Hedera settlement path
+- The test suite mocks `./x402.js` entirely via `vi.mock`. The real `transferWithAuthorization`
+  (`ContractExecuteTransaction` against Hedera testnet) and the real `writeHCS` path are
+  exercised only by live manual testing against testnet — no automated test covers them.
+  This is a known gap: integration tests require a funded Hedera testnet account and a live
+  subgraph, which are not available in CI.
+
 ## Receipt persistence
 - `receipts` Map is in-memory. Lost on restart. Add SQLite/file store when needed.
 

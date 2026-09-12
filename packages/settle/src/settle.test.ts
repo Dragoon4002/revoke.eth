@@ -94,7 +94,8 @@ const mockVerifyPayment = {
 const mockWriteHCS = vi.fn();
 
 vi.mock("@hashgraph/sdk", () => ({
-  Client: { forTestnet: vi.fn(() => ({})) },
+  Client: { forTestnet: vi.fn(() => ({ setOperator: vi.fn().mockReturnThis() })) },
+  PrivateKey: { fromStringECDSA: vi.fn(() => "mock-key") },
   TopicMessageSubmitTransaction: vi.fn().mockImplementation(() => ({
     setTopicId: vi.fn().mockReturnThis(),
     setMessage: vi.fn().mockReturnThis(),
@@ -165,7 +166,7 @@ describe("GET /service/:endpoint — capability gate", () => {
     expect(res.headers["X-Payment-Required"]).toBeTruthy();
   });
 
-  it("returns 402 when agent capability is revoked", async () => {
+  it("returns 403 when agent capability is revoked", async () => {
     mockGetProvenance.mockResolvedValueOnce(freshProvenance());
     mockQueryDelegation.mockResolvedValueOnce(
       agentWithCapability("bob", "summarise", { revoked: true })
@@ -178,7 +179,7 @@ describe("GET /service/:endpoint — capability gate", () => {
       agentName: "bob",
     });
 
-    expect(res.status).toBe(402);
+    expect(res.status).toBe(403);
   });
 });
 
@@ -298,8 +299,8 @@ describe("Revocation after payment — previously paid agent loses access", () =
       agentName: "grace",
     });
 
-    // Must re-gate — no caching of prior authorization
-    expect(secondRes.status).toBe(402);
+    // Must re-gate — 403 (revoked, not 402) distinguishes "never retry" from "pay to proceed"
+    expect(secondRes.status).toBe(403);
   });
 });
 

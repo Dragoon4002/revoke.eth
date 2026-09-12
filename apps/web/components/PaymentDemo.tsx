@@ -10,7 +10,7 @@ import {
   type PaymentRequirement402,
 } from "@/lib/api";
 
-const DEMO_ENDPOINT = "data-query";
+const DEMO_ENDPOINT = "summarise";
 const DEMO_AGENT = "alpha.agents.revoke.eth";
 
 type Step = "idle" | "requesting" | "needs_payment" | "signing" | "paying" | "success" | "error";

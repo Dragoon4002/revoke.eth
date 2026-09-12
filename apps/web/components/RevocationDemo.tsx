@@ -8,7 +8,7 @@ import { ADDRESSES, CAPABILITY_REGISTRY_ABI } from "@/lib/contracts";
 import { fetchServiceEndpoint, submitPayment, fixtureMarkRevoked, fixtureReset, type PaymentRequirement402, USE_FIXTURES } from "@/lib/api";
 
 const DEMO_AGENT = "alpha.agents.revoke.eth";
-const DEMO_CAPABILITY = "data-query";
+const DEMO_CAPABILITY = "summarise";
 const DEMO_ENDPOINT = DEMO_CAPABILITY;
 
 type Phase =
@@ -102,7 +102,7 @@ export function RevocationDemo() {
         setState((s) => ({ ...s, phase: "step2_done", revokeTx: "fixture-revoke" }));
         return;
       }
-      const agentNode = namehash(DEMO_AGENT);
+      const agentNode = keccak256(toBytes("alpha")); // contract uses keccak256(label), not ENS namehash
       const serviceId = keccak256(toBytes(DEMO_CAPABILITY));
       const hash = await writeContractAsync({
         address: ADDRESSES.CapabilityRegistry,

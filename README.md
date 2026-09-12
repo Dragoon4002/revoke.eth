@@ -110,7 +110,7 @@ curl http://localhost:5000/service/summarise -H "X-Agent-Name: alpha.eth"
 # Revoke
 node --import tsx/esm scripts/revoke-capability.mjs
 
-# Retry (should get 402 with no valid capability now)
+# Retry (should get 403 capability_required reason=revoked)
 curl http://localhost:5000/service/summarise -H "X-Agent-Name: alpha.eth"
 ```
 
@@ -120,19 +120,17 @@ curl http://localhost:5000/service/summarise -H "X-Agent-Name: alpha.eth"
 
 See `NOT-BUILT.md` for the complete list. Key limits for judges:
 
-1. **`transferWithAuthorization` is a stub.** `x402.ts:104` constructs a fake txHash from the nonce; it does not execute a real ERC-3009 on-chain transfer. The HCS write code is real but never called in the current demo path because the transfer step fails silently.
+1. **Single-owner.** All `registerAgent` and `grantCapability` calls must come from the deployer wallet. No multi-user registration in the demo.
 
-2. **Zero HCS messages.** Verified directly from Hedera mirror node: `https://testnet.mirrornode.hedera.com/api/v1/topics/0.0.10456766/messages` returns empty. No real payment has settled to the HCS topic.
+2. **No mainnet deployment.** Sepolia only.
 
-3. **Revoke response is 402, not a distinct 403.** `settle/src/index.ts:110` returns `402 Payment Required` when capability is revoked — same code as "capability exists, please pay." A distinct `403 Forbidden / reason: capability_required` response was described in session notes but not implemented in the final code.
+3. **ENSv2, not mainnet ENS.** Uses the ENSv2 contracts (`UserRegistry`, `ETHRegistry`) deployed to Sepolia. Not integrated with mainnet ENS resolver or mainnet `.eth` names.
 
-4. **Demo agent mismatch.** UI demos use capability `data-query`; only `summarise` is granted on-chain. In live mode, `data-query` requests return 402 (no capability) rather than the intended flow of 402 → pay → 200.
+4. **On-chain `settlePayment()` not called.** After HCS write, `settlePayment()` on `CapabilityRegistry` is not called — `PaymentSettled` events are not emitted; the subgraph doesn't index payment receipts.
 
-5. **Single-owner.** All `registerAgent` and `grantCapability` calls must come from the deployer wallet. There is no multi-user registration in the demo.
+5. **`SUBGRAPH_ID` not configured.** Defaults to `"unknown"` in provenance envelopes.
 
-6. **No mainnet deployment.** Sepolia only.
-
-7. **ENSv2, not mainnet ENS.** Uses the ENSv2 contracts (`UserRegistry`, `ETHRegistry`) deployed to Sepolia. Not integrated with mainnet ENS resolver or mainnet `.eth` names.
+6. **Unit tests mock Hedera SDK.** Real `transferWithAuthorization` and HCS write paths are covered by manual e2e script, not automated tests.
 
 ---
 
@@ -151,4 +149,4 @@ Both measured live on Sepolia against the deployed subgraph. No editing required
 
 **The Graph ($5,000):** Live subgraph at the endpoint above. The index server proxies all delegation queries through it. Provenance/freshness (lag blocks vs chain head) is surfaced on every response. Limit: SUBGRAPH_ID env var defaults to "unknown" — not set in current deploy.
 
-**Hedera ($6,000):** HCS topic exists, operator account exists, Hedera SDK wired in. Limit: `transferWithAuthorization` is a stub; no messages have settled to the HCS topic. The HCS write path (in `x402.ts:writeHCSReceipt` and `index.ts:writeHCS`) is real code but unreachable in the current demo because the transfer step does not execute.
+**Hedera ($6,000):** Real settlement via `ContractExecuteTransaction` against Hedera testnet EVM. HCS topic `0.0.10456766` has live messages — verified at seq=2 and seq=3, each containing `agentName`, `capability`, and Hedera txId (e.g. `0.0.10442951@1789212375.890103628`). Limit: unit tests mock the SDK; on-chain `settlePayment()` on `CapabilityRegistry` is not called after HCS write.

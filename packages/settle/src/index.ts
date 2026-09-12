@@ -9,6 +9,7 @@
 
 import {
   Client,
+  PrivateKey,
   TopicMessageSubmitTransaction,
   TopicId,
 } from "@hashgraph/sdk";
@@ -49,17 +50,22 @@ const receipts = new Map<string, HCSReceipt>();
 
 // ── Env ───────────────────────────────────────────────────────────────────────
 const HEDERA_TOPIC_ID = process.env["HEDERA_TOPIC_ID"] ?? "";
+const HEDERA_ACCOUNT_ID = process.env["HEDERA_ACCOUNT_ID"] ?? "";
+const HEDERA_PRIVATE_KEY = process.env["HEDERA_PRIVATE_KEY"] ?? "";
 const X402_AMOUNT = process.env["X402_AMOUNT"] ?? "1000000";
 const X402_TOKEN = process.env["X402_TOKEN_ADDRESS"] ?? "USDC";
 
 // ── HCS write (uses SDK mock in tests) ───────────────────────────────────────
 async function writeHCS(message: Record<string, unknown>): Promise<number> {
-  const client = Client.forTestnet();
+  const client = Client.forTestnet().setOperator(
+    HEDERA_ACCOUNT_ID,
+    PrivateKey.fromStringECDSA(HEDERA_PRIVATE_KEY)
+  );
   const receipt = await new TopicMessageSubmitTransaction()
     .setTopicId(TopicId.fromString(HEDERA_TOPIC_ID))
     .setMessage(JSON.stringify(message))
     .execute(client);
-  const r = await (receipt as unknown as { getReceipt: () => Promise<{ topicSequenceNumber: { toNumber: () => number } }> }).getReceipt();
+  const r = await (receipt as unknown as { getReceipt: (c?: unknown) => Promise<{ topicSequenceNumber: { toNumber: () => number } }> }).getReceipt(client);
   return r.topicSequenceNumber.toNumber();
 }
 
@@ -100,15 +106,30 @@ async function handleService(req: MockRequest, endpoint: string): Promise<MockRe
 
   // 2. Check capability via subgraph (NOT direct RPC)
   const delegation = await queryDelegation(req.agentName);
-  const cap = delegation.capabilities?.find(
-    (c: { name: string; revoked?: boolean; expiresAt?: string }) =>
-      c.name === endpoint && !c.revoked && Number(c.expiresAt ?? "9999999999") > Date.now() / 1000
-  );
+
+  type Cap = { name: string; revoked?: boolean; expiresAt?: string };
+  const caps: Cap[] = delegation.capabilities ?? [];
+  const matched = caps.find((c) => c.name === endpoint);
+
+  if (matched) {
+    // Capability exists but is revoked or expired → 403: retrying (with payment) will never succeed
+    const expired = Number(matched.expiresAt ?? "9999999999") <= Date.now() / 1000;
+    if (matched.revoked || expired) {
+      return {
+        status: 403,
+        body: { error: "capability_required", reason: matched.revoked ? "revoked" : "expired" },
+        headers: {},
+      };
+    }
+  }
+
+  // Capability absent entirely → 402: payment may grant access
+  const cap = matched && !matched.revoked && Number(matched.expiresAt ?? "9999999999") > Date.now() / 1000
+    ? matched : null;
 
   const paymentProof = req.headers["X-Payment-Proof"];
 
   if (!cap) {
-    // No valid capability — return 402
     const pr = buildPaymentRequirement(X402_AMOUNT, X402_TOKEN);
     return {
       status: 402,

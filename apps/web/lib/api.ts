@@ -108,15 +108,19 @@ export function fixtureReset() {
 export async function fetchServiceEndpoint(
   endpoint: string,
   agentName: string
-): Promise<{ status: 200; data: unknown; receipt: typeof sampleReceipt } | { status: 402; requirement: PaymentRequirement402 }> {
+): Promise<
+  | { status: 200; data: unknown; receipt: typeof sampleReceipt }
+  | { status: 402; requirement: PaymentRequirement402 }
+  | { status: 403; reason: string }
+> {
   if (USE_FIXTURES) {
     if (fixtureRevokedSet.has(`${agentName}:${endpoint}`)) {
-      throw new Error("403 capability_required: capability revoked");
+      return { status: 403, reason: "revoked" };
     }
     return { status: 402, requirement: {
       requestId: "00000000-0000-0000-0000-000000000001",
       agentName,
-      capability: { name: "data-query", scope: "read" },
+      capability: { name: "summarise", scope: "read" },
       amountWei: "1000000000000000",
       payTo: "0x000000000000000000000000000000000000dead",
       deadline: Date.now() + 300_000,
@@ -130,6 +134,10 @@ export async function fetchServiceEndpoint(
   if (res.status === 402) {
     const requirement = await res.json() as PaymentRequirement402;
     return { status: 402, requirement };
+  }
+  if (res.status === 403) {
+    const body = await res.json() as { reason?: string };
+    return { status: 403, reason: body.reason ?? "capability_required" };
   }
   if (res.ok) {
     const body = await res.json() as { result: unknown; receipt: typeof sampleReceipt };

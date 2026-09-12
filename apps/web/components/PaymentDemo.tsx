@@ -39,6 +39,10 @@ export function PaymentDemo({ agentName = DEMO_AGENT }: { agentName?: string }) 
         setFlow({ step: "success", receipt: result.receipt });
         return;
       }
+      if (result.status === 403) {
+        setFlow({ step: "error", message: `403 capability_required (${result.reason})` });
+        return;
+      }
 
       // 402 — need to pay
       const requirement = result.requirement;

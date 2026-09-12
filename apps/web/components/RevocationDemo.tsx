@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAccount, useSignTypedData, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { keccak256, toBytes, namehash } from "viem";
 import type { PaidRequestReceipt } from "@revoke/contracts/src/types/index";
 import { ADDRESSES, CAPABILITY_REGISTRY_ABI } from "@/lib/contracts";
-import { fetchServiceEndpoint, submitPayment, fixtureMarkRevoked, fixtureReset, type PaymentRequirement402, USE_FIXTURES } from "@/lib/api";
+import { fetchServiceEndpoint, submitPayment, fixtureMarkRevoked, fixtureReset, type PaymentRequirement402, USE_FIXTURES, fetchDelegation } from "@/lib/api";
 
 const DEMO_AGENT = "alpha.agents.revoke.eth";
 const DEMO_CAPABILITY = "summarise";
@@ -32,12 +32,31 @@ type State = {
 export function RevocationDemo() {
   const { isConnected, address } = useAccount();
   const [state, setState] = useState<State>({ phase: "ready" });
+  const [indexVerdict, setIndexVerdict] = useState<"fresh" | "stale" | "unknown">("unknown");
+  const [indexLag, setIndexLag] = useState<number | null>(null);
   const { signTypedDataAsync } = useSignTypedData();
   const { writeContractAsync } = useWriteContract();
+
+  useEffect(() => {
+    let active = true;
+    async function pollProvenance() {
+      try {
+        const d = await fetchDelegation(DEMO_AGENT);
+        if (active) {
+          setIndexVerdict(d.provenance.verdict as "fresh" | "stale" | "unknown");
+          setIndexLag(d.provenance.lagBlocks);
+        }
+      } catch { /* ignore */ }
+    }
+    pollProvenance();
+    const id = setInterval(pollProvenance, 10_000);
+    return () => { active = false; clearInterval(id); };
+  }, []);
 
   async function runPayment(): Promise<PaidRequestReceipt | null> {
     const result = await fetchServiceEndpoint(DEMO_ENDPOINT, DEMO_AGENT);
     if (result.status === 200) return result.receipt;
+    if (result.status === 403) throw new Error(`403 capability_required (${result.reason})`);
 
     const requirement = result.requirement;
 
@@ -120,39 +139,29 @@ export function RevocationDemo() {
   async function step3_pay_fail() {
     setState((s) => ({ ...s, phase: "step3_paying" }));
     try {
-      // This call should be rejected by Session 3 (capability revoked)
       const result = await fetchServiceEndpoint(DEMO_ENDPOINT, DEMO_AGENT);
-      // If fixture mode, simulate failure
-      if (result.status === 402) {
+      if (result.status === 403) {
         setState((s) => ({
           ...s,
           phase: "step3_done_fail",
-          failReason: "402 — capability revoked, payment rejected",
+          failReason: `403 capability_required (${result.reason}) — revocation enforced`,
         }));
         return;
       }
-      // Live: should get 403
+      // Propagation not complete yet
       setState((s) => ({
         ...s,
         phase: "step3_done_fail",
-        failReason: "Unexpected success — capability may not be revoked on-chain yet",
+        failReason: result.status === 200
+          ? "Unexpected 200 — capability may not be revoked yet, wait and retry"
+          : "402 — propagation pending, wait ~5s and retry",
       }));
     } catch (e) {
-      // 403 from live service = expected failure = demo success
-      const msg = e instanceof Error ? e.message : "error";
-      if (msg.includes("403") || msg.includes("capability_required") || msg.includes("revoked")) {
-        setState((s) => ({
-          ...s,
-          phase: "step3_done_fail",
-          failReason: "403 capability_required — revocation enforced",
-        }));
-      } else {
-        setState((s) => ({
-          ...s,
-          phase: "step3_done_fail",
-          failReason: msg,
-        }));
-      }
+      setState((s) => ({
+        ...s,
+        phase: "error",
+        error: e instanceof Error ? e.message : "network error",
+      }));
     }
   }
 
@@ -163,12 +172,20 @@ export function RevocationDemo() {
 
   const { phase } = state;
 
+  const verdictColor = indexVerdict === "fresh" ? "text-green-400" : indexVerdict === "stale" ? "text-yellow-400" : "text-gray-400";
+
   return (
     <div className="border-2 border-violet-700 rounded-xl p-5 bg-gray-900 space-y-4">
-      <div className="flex items-center gap-2">
-        <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-        <h3 className="font-semibold text-sm text-violet-300">Revocation Demo Path</h3>
-        <span className="text-xs text-gray-500">Under 60 seconds</span>
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+          <h3 className="font-semibold text-sm text-violet-300">Revocation Demo Path</h3>
+          <span className="text-xs text-gray-500">Under 60 seconds</span>
+        </div>
+        <div className="flex items-center gap-2 text-xs font-mono">
+          <span className={`font-bold ${verdictColor}`}>INDEX {indexVerdict.toUpperCase()}</span>
+          {indexLag !== null && <span className="text-gray-600">lag {indexLag}blk</span>}
+        </div>
       </div>
 
       <div className="grid gap-3">
@@ -182,7 +199,14 @@ export function RevocationDemo() {
             phase === "step1_done" || phase === "step2_revoking" || phase === "step2_done" || phase === "step3_paying" || phase === "step3_done_fail" ? "done" :
             "waiting"
           }
-          extra={state.receipt1 ? <span className="text-xs text-green-400">receipt: {state.receipt1.requestId.slice(0, 18)}</span> : null}
+          extra={state.receipt1 ? (
+            <span className="text-xs text-green-400 font-mono">
+              HCS seq={state.receipt1.hcsSequence} · {state.receipt1.agentName} ·{" "}
+              {typeof state.receipt1.capability === "string"
+                ? state.receipt1.capability
+                : state.receipt1.capability.name}
+            </span>
+          ) : null}
         >
           {phase === "ready" && isConnected && (
             <button

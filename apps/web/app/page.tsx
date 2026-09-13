@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ADDRESSES } from "@/lib/contracts";
 import { Nav } from "@/components/Nav";
+import { TrackCards } from "@/components/TrackCards";
 
 const SPEC = [
   ["Authorization", "an ENS capability"],
@@ -70,10 +71,14 @@ export default function Landing() {
             access on-chain — with changes enforced within seconds.
           </p>
 
-          <div className="anim-up anim-d2 my-8">
+          <div className="anim-up anim-d2 my-8 flex flex-wrap items-center gap-3">
             <Link href="/app"
               className="group inline-flex items-center gap-2 rounded-full bg-accent text-bg px-6 py-3 font-medium shadow-elev hover:bg-accent-hover hover:-translate-y-0.5 transition-all duration-200">
-              Run the demo <span aria-hidden className="arrow">→</span>
+              Demo online <span aria-hidden className="arrow">→</span>
+            </Link>
+            <Link href="/docs"
+              className="inline-flex items-center rounded-full border border-border text-fg px-6 py-3 font-medium hover:border-accent hover:text-accent transition-all duration-200">
+              Docs
             </Link>
           </div>
 
@@ -143,6 +148,9 @@ export default function Landing() {
           </div>
         </div>
       </section>
+
+      {/* Track usage — 3 cards */}
+      <TrackCards />
 
       {/* Closing CTA */}
       <section className="max-w-6xl mx-auto px-6 py-28 text-center">

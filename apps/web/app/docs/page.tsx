@@ -124,8 +124,8 @@ pnpm dev            # listens on :5000`}</Code>
           <p className="text-sm text-muted mb-4">
             Point the frontend at your local services (or omit to use built-in fixtures):
           </p>
-          <Code>{`cd apps/web-tester
-# apps/web-tester/.env.local
+          <Code>{`cd apps/web
+# apps/web/.env.local
 NEXT_PUBLIC_GRAPH_QUERY_URL=http://localhost:4000
 NEXT_PUBLIC_SETTLE_URL=http://localhost:5000
 
@@ -149,6 +149,69 @@ pnpm dev            # http://localhost:3000`}</Code>
             Pull a settlement receipt straight from Hedera&apos;s public mirror node:
           </p>
           <Code>{`curl -s ${MIRROR}/4`}</Code>
+        </Section>
+
+        {/* Add your own agent */}
+        <Section title="Add your own agent" step="07">
+          <p className="text-sm text-muted mb-4">
+            The <code className="code">scripts/register-agent.mjs</code> script registers a new agent
+            (creates the ENS subname <code className="code">&lt;label&gt;.agents.revoke.eth</code>) and
+            grants it one capability, both on Sepolia, using the wallet in{" "}
+            <code className="code">PRIVATE_KEY</code>. It takes <span className="text-fg">no CLI
+            args</span> — you edit two hardcoded constants at the top before running.
+          </p>
+          <div className="rounded-xl border border-red-200 bg-red-200/20 px-4 py-3 text-sm text-red-800 mb-4">
+            <span className="font-mono text-xs font-bold">Heads up</span> — on the live deployment,{" "}
+            <code className="code">registerAgent</code> is <code className="code">onlyOwner</code> on the
+            AgentRegistrar, so only the contract deployer wallet can register new agents. A third party
+            running this against the live contracts will get a revert. To register your own agents, deploy
+            your own contracts first.
+          </div>
+
+          <SubHead>1. Edit the constants</SubHead>
+          <p className="text-sm text-muted mb-2">
+            Open <code className="code">scripts/register-agent.mjs</code> and set:
+          </p>
+          <Code>{`const AGENT_LABEL  = "alpha";     // → your agent name (becomes <label>.agents.revoke.eth)
+const SERVICE_NAME = "summarise"; // → the capability to grant`}</Code>
+
+          <div className="mt-8">
+            <SubHead>2. Run it</SubHead>
+            <p className="text-sm text-muted mb-2">
+              Requires <code className="code">PRIVATE_KEY</code> and{" "}
+              <code className="code">SEPOLIA_RPC_URL</code> in <code className="code">.env</code>:
+            </p>
+            <Code>{`node --env-file=.env --import tsx/esm scripts/register-agent.mjs`}</Code>
+            <p className="text-sm text-muted mt-3">
+              This runs <code className="code">registerAgent</code> then{" "}
+              <code className="code">grantCapability</code> and prints both tx hashes.
+            </p>
+          </div>
+
+          <div className="mt-8">
+            <SubHead>3. Verify the delegation indexed</SubHead>
+            <Code>{`curl http://localhost:4000/delegation/<label>.eth`}</Code>
+          </div>
+
+          <div className="mt-8">
+            <SubHead>4. Test the gate</SubHead>
+            <Code>{`curl http://localhost:5000/service/<capability> -H "X-Agent-Name: <label>.eth"`}</Code>
+            <p className="text-sm text-muted mt-3">
+              Expect the same 200 / 402 / 403 outcomes documented above.
+            </p>
+          </div>
+
+          <div className="mt-8">
+            <SubHead>5. Revoke anytime</SubHead>
+            <p className="text-sm text-muted mb-2">
+              Edit the hardcoded label and service in{" "}
+              <code className="code">scripts/revoke-capability.mjs</code>, then run:
+            </p>
+            <Code>{`node --env-file=.env --import tsx/esm scripts/revoke-capability.mjs`}</Code>
+            <p className="text-sm text-muted mt-3">
+              Once revoked, paying never unlocks the endpoint — the gate returns 403.
+            </p>
+          </div>
         </Section>
 
         <footer className="border-t border-border/50 pt-8 text-xs text-muted font-mono tracking-wide">

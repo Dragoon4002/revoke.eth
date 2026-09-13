@@ -9,17 +9,14 @@ services:
     runtime: node
     plan: free
     rootDir: .
-    buildCommand: corepack enable && pnpm install --frozen-lockfile
+    buildCommand: npm i -g pnpm@10.4.0 && pnpm install --frozen-lockfile
     startCommand: pnpm --filter @revoke/index start
     envVars:
-      # Preferred (no rate limit): set GRAPH_API_KEY + GRAPH_SUBGRAPH_ID → gateway URL built automatically.
-      - key: GRAPH_API_KEY
-        sync: false   # thegraph.com/studio → API Keys
-      - key: GRAPH_SUBGRAPH_ID
-        sync: false   # published subgraph deployment id (Qm... / 0x...)
-      # Fallback: Studio query URL (free, 429s under load) — used if the two above are unset.
+      # Studio query URL (free; 429s under heavy load). Set in dashboard:
+      #   https://api.studio.thegraph.com/query/1760021/revoke-ens/v0.0.2
+      # Optional gateway path (no rate limit): instead set GRAPH_API_KEY + GRAPH_SUBGRAPH_ID.
       - key: GRAPH_QUERY_URL
-        sync: false   # https://api.studio.thegraph.com/query/1760021/revoke-ens/v0.0.2
+        sync: false
       - key: SEPOLIA_RPC_URL
         sync: false   # chain-head lookup for provenance freshness
 
@@ -28,7 +25,7 @@ services:
     runtime: node
     plan: free
     rootDir: .
-    buildCommand: corepack enable && pnpm install --frozen-lockfile
+    buildCommand: npm i -g pnpm@10.4.0 && pnpm install --frozen-lockfile
     startCommand: pnpm --filter @revoke/settle start
     envVars:
       - key: GRAPH_QUERY_URL

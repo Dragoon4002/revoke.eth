@@ -15,7 +15,6 @@ export function Nav({ children }: { children?: React.ReactNode }) {
             priority
             className="rounded-lg transition-transform group-hover:scale-105"
           />
-          <span className="text-[11px] font-mono tracking-widest text-muted uppercase">AgentNS</span>
         </Link>
         {children && (
           <nav className="flex items-center gap-6 text-sm">{children}</nav>

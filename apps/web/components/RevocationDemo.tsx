@@ -172,19 +172,19 @@ export function RevocationDemo() {
 
   const { phase } = state;
 
-  const verdictColor = indexVerdict === "fresh" ? "text-green-400" : indexVerdict === "stale" ? "text-yellow-400" : "text-gray-400";
+  const verdictColor = indexVerdict === "fresh" ? "text-green-700" : indexVerdict === "stale" ? "text-yellow-700" : "text-muted";
 
   return (
-    <div className="border-2 border-violet-700 rounded-xl p-5 bg-gray-900 space-y-4">
+    <div className="border-2 border-accent rounded-xl p-5 bg-surface space-y-4">
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-          <h3 className="font-semibold text-sm text-violet-300">Revocation Demo Path</h3>
-          <span className="text-xs text-gray-500">Under 60 seconds</span>
+          <span className="w-2 h-2 rounded-full bg-red-600 animate-pulse" />
+          <h3 className="font-semibold text-sm text-accent">Revocation Demo Path</h3>
+          <span className="text-xs text-muted">Under 60 seconds</span>
         </div>
         <div className="flex items-center gap-2 text-xs font-mono">
           <span className={`font-bold ${verdictColor}`}>INDEX {indexVerdict.toUpperCase()}</span>
-          {indexLag !== null && <span className="text-gray-600">lag {indexLag}blk</span>}
+          {indexLag !== null && <span className="text-muted">lag {indexLag}blk</span>}
         </div>
       </div>
 
@@ -200,7 +200,7 @@ export function RevocationDemo() {
             "waiting"
           }
           extra={state.receipt1 ? (
-            <span className="text-xs text-green-400 font-mono">
+            <span className="text-xs text-green-700 font-mono">
               HCS seq={state.receipt1.hcsSequence} · {state.receipt1.agentName} ·{" "}
               {typeof state.receipt1.capability === "string"
                 ? state.receipt1.capability
@@ -211,7 +211,7 @@ export function RevocationDemo() {
           {phase === "ready" && isConnected && (
             <button
               onClick={step1_pay}
-              className="px-3 py-1.5 bg-violet-600 hover:bg-violet-500 rounded text-xs font-medium"
+              className="px-3 py-1.5 bg-accent text-bg hover:bg-accent-hover rounded text-xs font-medium"
             >
               Pay Now
             </button>
@@ -230,13 +230,13 @@ export function RevocationDemo() {
           }
           extra={state.revokeTx ? (
             state.revokeTx === "fixture-revoke" ? (
-              <span className="text-xs text-yellow-400">fixture: revoked in-memory</span>
+              <span className="text-xs text-yellow-700">fixture: revoked in-memory</span>
             ) : (
               <a
                 href={`https://sepolia.etherscan.io/tx/${state.revokeTx}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs text-violet-400 underline"
+                className="text-xs text-accent underline"
               >
                 tx: {state.revokeTx.slice(0, 14)}…
               </a>
@@ -246,7 +246,7 @@ export function RevocationDemo() {
           {phase === "step1_done" && (
             <button
               onClick={step2_revoke}
-              className="px-3 py-1.5 bg-red-700 hover:bg-red-600 rounded text-xs font-medium"
+              className="px-3 py-1.5 bg-red-700 text-bg hover:bg-red-800 rounded text-xs font-medium"
             >
               Revoke
             </button>
@@ -264,13 +264,13 @@ export function RevocationDemo() {
             "waiting"
           }
           extra={state.failReason ? (
-            <span className="text-xs text-red-400">{state.failReason}</span>
+            <span className="text-xs text-red-700">{state.failReason}</span>
           ) : null}
         >
           {phase === "step2_done" && (
             <button
               onClick={step3_pay_fail}
-              className="px-3 py-1.5 bg-gray-600 hover:bg-gray-500 rounded text-xs font-medium"
+              className="px-3 py-1.5 bg-surface-2 hover:bg-border rounded text-xs font-medium"
             >
               Attempt Payment
             </button>
@@ -279,26 +279,26 @@ export function RevocationDemo() {
       </div>
 
       {phase === "step3_done_fail" && (
-        <div className="text-center p-3 bg-green-900/20 border border-green-700 rounded-lg">
-          <p className="text-green-400 font-bold text-sm">Demo Complete</p>
-          <p className="text-xs text-gray-400 mt-1">Pay → Revoke → Fail demonstrated on camera</p>
+        <div className="text-center p-3 bg-green-200 border border-green-600 rounded-lg">
+          <p className="text-green-700 font-bold text-sm">Demo Complete</p>
+          <p className="text-xs text-muted mt-1">Pay → Revoke → Fail demonstrated on camera</p>
         </div>
       )}
 
       {phase === "error" && (
-        <div className="text-sm text-red-400 bg-red-900/20 border border-red-800 rounded-lg p-3">
+        <div className="text-sm text-red-700 bg-red-200 border border-red-400 rounded-lg p-3">
           {state.error}
         </div>
       )}
 
       {!isConnected && (
-        <p className="text-xs text-gray-500 text-center">Connect wallet to run demo</p>
+        <p className="text-xs text-muted text-center">Connect wallet to run demo</p>
       )}
 
       {phase !== "ready" && (
         <button
           onClick={reset}
-          className="text-xs text-gray-500 hover:text-gray-300 underline"
+          className="text-xs text-muted hover:text-muted underline"
         >
           Reset
         </button>
@@ -325,23 +325,23 @@ function DemoStep({
   return (
     <div
       className={`flex items-start gap-3 p-3 rounded-lg border transition-all ${
-        status === "active" ? "border-violet-600 bg-violet-900/20" :
-        status === "done" ? "border-green-800 bg-green-900/10 opacity-80" :
-        "border-gray-700 opacity-40"
+        status === "active" ? "border-accent bg-surface-2" :
+        status === "done" ? "border-green-600 bg-green-200 opacity-80" :
+        "border-border opacity-40"
       }`}
     >
       <span
         className={`w-6 h-6 flex-shrink-0 rounded-full flex items-center justify-center text-xs font-bold mt-0.5 ${
-          status === "done" ? "bg-green-600" :
-          status === "active" ? "bg-violet-600 animate-pulse" :
-          "bg-gray-700"
+          status === "done" ? "bg-green-700 text-bg" :
+          status === "active" ? "bg-accent text-bg animate-pulse" :
+          "bg-surface-2 text-fg"
         }`}
       >
         {status === "done" ? "✓" : number}
       </span>
       <div className="flex-1">
         <p className="text-sm font-medium">{label}</p>
-        <p className="text-xs text-gray-400">{description}</p>
+        <p className="text-xs text-muted">{description}</p>
         {extra && <div className="mt-1">{extra}</div>}
       </div>
       {children && <div className="flex-shrink-0">{children}</div>}

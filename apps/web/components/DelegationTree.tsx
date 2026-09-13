@@ -35,7 +35,7 @@ export function DelegationTree({ parentName }: Props) {
 
   if (loading) {
     return (
-      <div className="text-center py-12 text-gray-500 animate-pulse">
+      <div className="text-center py-12 text-muted animate-pulse">
         Loading delegation tree…
       </div>
     );
@@ -44,10 +44,10 @@ export function DelegationTree({ parentName }: Props) {
   if (error) {
     return (
       <div className="text-center py-8">
-        <p className="text-red-400 text-sm">{error}</p>
+        <p className="text-red-700 text-sm">{error}</p>
         <button
           onClick={load}
-          className="mt-3 text-xs text-violet-400 hover:text-violet-300 underline"
+          className="mt-3 text-xs text-accent hover:text-accent underline"
         >
           Retry
         </button>
@@ -62,16 +62,16 @@ export function DelegationTree({ parentName }: Props) {
       <ProvenanceBadge provenance={tree.provenance} />
 
       <div>
-        <p className="text-xs text-gray-500 mb-2 uppercase tracking-wider">Root Agent</p>
+        <p className="text-xs text-muted mb-2 uppercase tracking-wider">Root Agent</p>
         <AgentCard delegation={tree.root} onRevoked={load} />
       </div>
 
       {tree.children.length > 0 && (
         <div>
-          <p className="text-xs text-gray-500 mb-2 uppercase tracking-wider">
+          <p className="text-xs text-muted mb-2 uppercase tracking-wider">
             Sub-agents ({tree.children.length})
           </p>
-          <div className="space-y-3 pl-4 border-l-2 border-gray-700">
+          <div className="space-y-3 pl-4 border-l-2 border-border">
             {tree.children.map((child) => (
               <AgentCard key={child.agent} delegation={child} onRevoked={load} />
             ))}
@@ -85,20 +85,20 @@ export function DelegationTree({ parentName }: Props) {
 function ProvenanceBadge({ provenance }: { provenance: ProvenanceEnvelope }) {
   const verdictColor =
     provenance.verdict === "fresh"
-      ? "text-green-400"
+      ? "text-green-700"
       : provenance.verdict === "stale"
-      ? "text-yellow-400"
-      : "text-gray-400";
+      ? "text-yellow-700"
+      : "text-muted";
 
   return (
-    <div className="flex items-center gap-3 text-xs bg-gray-900 border border-gray-700 rounded-lg px-3 py-2">
+    <div className="flex items-center gap-3 text-xs bg-surface border border-border rounded-lg px-3 py-2">
       <span className={`font-bold ${verdictColor}`}>
         INDEX {provenance.verdict.toUpperCase()}
       </span>
-      <span className="text-gray-500">
+      <span className="text-muted">
         block {provenance.indexedBlock} / {provenance.chainHead} (lag: {provenance.lagBlocks})
       </span>
-      <span className="text-gray-600">
+      <span className="text-muted">
         checked {new Date(provenance.checkedAt).toLocaleTimeString()}
       </span>
     </div>

@@ -19,6 +19,7 @@ const CAPABILITY_ABI = [
 ];
 
 const rawKey = process.env.PRIVATE_KEY?.trim() ?? "";
+if (!rawKey) { console.error("✗ PRIVATE_KEY unset"); process.exit(1); }
 const privateKey = rawKey.startsWith("0x") ? rawKey : `0x${rawKey}`;
 const rpcUrl = process.env.SEPOLIA_RPC_URL;
 

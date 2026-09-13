@@ -33,13 +33,13 @@ export function RevokeButton({ delegation, capability, onRevoked }: Props) {
 
   if (!isConnected) {
     return (
-      <span className="text-xs text-gray-500">Connect wallet to revoke</span>
+      <span className="text-xs text-muted">Connect wallet to revoke</span>
     );
   }
 
   if (isSuccess) {
     return (
-      <span className="text-xs text-green-400 font-mono">
+      <span className="text-xs text-green-700 font-mono">
         Revoked ✓{" "}
         <a
           href={`https://sepolia.etherscan.io/tx/${txHash}`}
@@ -58,12 +58,12 @@ export function RevokeButton({ delegation, capability, onRevoked }: Props) {
       <button
         onClick={handleRevoke}
         disabled={isPending || isConfirming}
-        className="px-3 py-1 bg-red-700 hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed rounded text-xs font-medium transition-colors"
+        className="px-3 py-1 bg-red-700 text-bg hover:bg-red-800 disabled:opacity-50 disabled:cursor-not-allowed rounded text-xs font-medium transition-colors"
       >
         {isPending ? "Sign tx…" : isConfirming ? "Confirming…" : "Revoke"}
       </button>
       {error && (
-        <span className="text-xs text-red-400">{error.message.slice(0, 80)}</span>
+        <span className="text-xs text-red-700">{error.message.slice(0, 80)}</span>
       )}
     </div>
   );

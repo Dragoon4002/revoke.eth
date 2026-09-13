@@ -105,10 +105,10 @@ export function PaymentDemo({ agentName = DEMO_AGENT }: { agentName?: string }) 
   }
 
   return (
-    <div className="border border-gray-700 rounded-xl p-5 bg-gray-900 space-y-4">
+    <div className="border border-border rounded-xl p-5 bg-surface space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="font-semibold text-sm">x402 Payment Flow</h3>
-        <span className="text-xs text-gray-500 font-mono">{agentName}</span>
+        <span className="text-xs text-muted font-mono">{agentName}</span>
       </div>
 
       <FlowVisualizer flow={flow} />
@@ -118,7 +118,7 @@ export function PaymentDemo({ agentName = DEMO_AGENT }: { agentName?: string }) 
           <button
             onClick={runFlow}
             disabled={!isConnected}
-            className="px-4 py-2 bg-violet-600 hover:bg-violet-500 disabled:opacity-40 disabled:cursor-not-allowed rounded-lg text-sm font-medium transition-colors"
+            className="px-4 py-2 bg-accent text-bg hover:bg-accent-hover disabled:opacity-40 disabled:cursor-not-allowed rounded-lg text-sm font-medium transition-colors"
           >
             {flow.step === "success" ? "Run Again" : "Start Payment Flow"}
           </button>
@@ -126,13 +126,13 @@ export function PaymentDemo({ agentName = DEMO_AGENT }: { agentName?: string }) 
         {flow.step !== "idle" && (
           <button
             onClick={reset}
-            className="px-3 py-2 text-xs text-gray-400 hover:text-gray-200 rounded-lg border border-gray-700 hover:border-gray-500 transition-colors"
+            className="px-3 py-2 text-xs text-muted hover:text-fg rounded-lg border border-border hover:border-accent transition-colors"
           >
             Reset
           </button>
         )}
         {!isConnected && (
-          <span className="text-xs text-gray-500 self-center">Connect wallet first</span>
+          <span className="text-xs text-muted self-center">Connect wallet first</span>
         )}
       </div>
     </div>
@@ -161,22 +161,22 @@ function FlowVisualizer({ flow }: { flow: FlowState }) {
           <div
             key={step.key}
             className={`flex items-start gap-3 p-2 rounded-lg transition-all ${
-              isActive ? "bg-violet-900/30 border border-violet-700" :
+              isActive ? "bg-surface-2 border border-accent" :
               isDone ? "opacity-60" : "opacity-30"
             }`}
           >
             <span
               className={`mt-0.5 w-5 h-5 flex-shrink-0 rounded-full flex items-center justify-center text-xs font-bold ${
-                isDone ? "bg-green-600" :
-                isActive ? "bg-violet-600 animate-pulse" :
-                "bg-gray-700"
+                isDone ? "bg-green-700 text-bg" :
+                isActive ? "bg-accent text-bg animate-pulse" :
+                "bg-surface-2 text-fg"
               }`}
             >
               {isDone ? "✓" : i + 1}
             </span>
             <div>
               <p className="text-sm font-mono font-medium">{step.label}</p>
-              <p className="text-xs text-gray-400">{step.description}</p>
+              <p className="text-xs text-muted">{step.description}</p>
             </div>
           </div>
         );
@@ -187,7 +187,7 @@ function FlowVisualizer({ flow }: { flow: FlowState }) {
       )}
 
       {flow.step === "error" && (
-        <div className="text-sm text-red-400 bg-red-900/20 border border-red-800 rounded-lg p-3">
+        <div className="text-sm text-red-700 bg-red-200 border border-red-400 rounded-lg p-3">
           {flow.message}
         </div>
       )}
@@ -197,19 +197,19 @@ function FlowVisualizer({ flow }: { flow: FlowState }) {
 
 function ReceiptCard({ receipt }: { receipt: PaidRequestReceipt }) {
   return (
-    <div className="mt-2 text-xs font-mono bg-gray-800 border border-gray-600 rounded-lg p-3 space-y-1">
-      <p className="text-green-400 font-bold mb-2">Payment Settled</p>
-      <p><span className="text-gray-500">requestId: </span>{receipt.requestId}</p>
-      <p><span className="text-gray-500">agent: </span>{receipt.agentName}</p>
-      <p><span className="text-gray-500">capability: </span>{receipt.capability.name}</p>
-      <p><span className="text-gray-500">hcsSeq: </span>{receipt.hcsSequence}</p>
+    <div className="mt-2 text-xs font-mono bg-surface-2 border border-border rounded-lg p-3 space-y-1">
+      <p className="text-green-700 font-bold mb-2">Payment Settled</p>
+      <p><span className="text-muted">requestId: </span>{receipt.requestId}</p>
+      <p><span className="text-muted">agent: </span>{receipt.agentName}</p>
+      <p><span className="text-muted">capability: </span>{receipt.capability.name}</p>
+      <p><span className="text-muted">hcsSeq: </span>{receipt.hcsSequence}</p>
       <p>
-        <span className="text-gray-500">settleTx: </span>
+        <span className="text-muted">settleTx: </span>
         <a
           href={`https://sepolia.etherscan.io/tx/${receipt.settlementTx}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-violet-400 underline"
+          className="text-accent underline"
         >
           {receipt.settlementTx.slice(0, 18)}…
         </a>

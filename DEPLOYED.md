@@ -46,7 +46,7 @@ All publicly verifiable. Sepolia testnet.
 | Operator EVM Address | `0xf5d36e31ac1469734f125771ad4581a39355888c` |
 | Mirror Node Messages | [link](https://testnet.mirrornode.hedera.com/api/v1/topics/0.0.10456766/messages) |
 
-**Note:** HCS topic exists and account is funded. Zero messages have been written — `transferWithAuthorization` is a stub in the current code. See NOT-BUILT.md.
+**Note:** HCS topic has real receipts — seq=1 is a test stub; seq=2–6 are real settlement receipts with real Hedera txIds (verified on mirror node 2026-09-13). Each settlement tx is a real `CONTRACTCALL` (`result: SUCCESS`). The ERC-3009 token is a MOCK contract, so no real token value moves (`token_transfers` empty). Receipt + settlement call are real; value transfer is simulated. See NOT-BUILT.md.
 
 ## Demo Transactions (Sepolia)
 

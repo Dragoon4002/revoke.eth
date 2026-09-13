@@ -32,7 +32,8 @@ All deliberate scope limits. Claims that were overstated in earlier sessions are
 **Previously overstated — corrected as of 2026-09-12:**
 
 - ~~"`transferWithAuthorization` is a stub"~~ — **RESOLVED.** Real `ContractExecuteTransaction` against Hedera testnet EVM implemented in `x402.ts`. Settlement executes via `@hashgraph/sdk`.
-- ~~"Zero HCS messages on topic"~~ — **RESOLVED.** HCS operator credentials wired (`client.setOperator()`). Verified receipts on mirror node: topic `0.0.10456766` has messages at seq=2, seq=3 with real Hedera txIds (e.g. `0.0.10442951@1789212375.890103628`).
+- ~~"Zero HCS messages on topic"~~ — **RESOLVED.** HCS operator credentials wired (`client.setOperator()`). Verified on mirror node 2026-09-13: topic `0.0.10456766` has 6 messages — seq=1 is a `settle-integration-test` stub; seq=2–6 are real settlement receipts with real Hedera txIds (`0.0.10442951@<ts>`, e.g. `0.0.10442951@1789288886.140552920`). Each cited settlement tx is a real `CONTRACTCALL` with `result: SUCCESS` on Hedera testnet.
+- **Token VALUE transfer uses a MOCK ERC-3009 contract** (`0x76df1ace…`, entity `0.0.10498748`) on testnet. The settlement `CONTRACTCALL` and the HCS receipt are real and independently verifiable; `token_transfers` on the settlement tx is empty because the token is a mock — **no real USDC/HBAR value moves.** The receipt write is real; the value transfer is simulated by a mock token. Not "settlement is stubbed."
 - ~~"Distinct 403 on revoked agent returns 402"~~ — **RESOLVED.** `settle/src/index.ts` now returns `403 { error: "capability_required", reason: "revoked" }` when a matched capability is revoked or expired, vs `402` when capability is absent. Test updated and passing.
 
 **Remaining limits:**
@@ -86,7 +87,9 @@ Timing transactions:
 | x402 challenge issued (402) | ✅ |
 | EIP-712 signature verified | ✅ |
 | `transferWithAuthorization` executes on Hedera EVM | ✅ resolved 2026-09-12 |
-| HCS message written to topic `0.0.10456766` | ✅ seq=2, seq=3 confirmed on mirror node |
+| HCS message written to topic `0.0.10456766` | ✅ seq=2–6 confirmed on mirror node (real txIds); seq=1 is a test stub |
+| Settlement tx is real on Hedera | ✅ `CONTRACTCALL` `result: SUCCESS` (e.g. `0.0.10442951@1789288886.140552920`) |
+| Real token VALUE moved | ❌ mock ERC-3009 token — `token_transfers` empty; receipt real, value simulated |
 | HCS receipt agentName bound to ENS label | ✅ `agentName: "alpha.eth"` in decoded message |
 
 **Gate 2 PASSES.**

@@ -9,8 +9,8 @@ services:
     runtime: node
     plan: free
     rootDir: .
-    buildCommand: npm i -g pnpm@10.4.0 && pnpm install --frozen-lockfile
-    startCommand: pnpm --filter @revoke/index start
+    buildCommand: npx --yes pnpm@10.4.0 install --frozen-lockfile
+    startCommand: npx --yes pnpm@10.4.0 --filter @revoke/index start
     envVars:
       # Studio query URL (free; 429s under heavy load). Set in dashboard:
       #   https://api.studio.thegraph.com/query/1760021/revoke-ens/v0.0.2
@@ -25,8 +25,8 @@ services:
     runtime: node
     plan: free
     rootDir: .
-    buildCommand: npm i -g pnpm@10.4.0 && pnpm install --frozen-lockfile
-    startCommand: pnpm --filter @revoke/settle start
+    buildCommand: npx --yes pnpm@10.4.0 install --frozen-lockfile
+    startCommand: npx --yes pnpm@10.4.0 --filter @revoke/settle start
     envVars:
       - key: GRAPH_QUERY_URL
         sync: false   # settle queries the subgraph in-process via @revoke/index

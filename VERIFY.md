@@ -5,15 +5,15 @@ wallet, no deploy, no key. Values below were confirmed live 2026-09-13.
 
 - **Checks 1 & 3 are fully public** — curl / browser only, zero setup.
 - **Checks 2 & 4 hit our two hosted services** (`revoke-index`, `revoke-settle`
-  on Render). Free tier idles → **first request may cold-start ~30–60s. Warm
-  them once before timing anything.** If not yet deployed, see
+  on Render, live). Free tier idles → **first request may cold-start ~30–60s.
+  Warm them once before timing anything.** To run your own copy instead, see
   [Running the services yourself](#running-the-services-yourself).
 
 Set once:
 
 ```sh
-INDEX=https://revoke-index.onrender.com     # or http://localhost:4000 if running locally
-SETTLE=https://revoke-settle.onrender.com   # or http://localhost:5000
+INDEX=https://revoke-index-xtql.onrender.com     # or http://localhost:4000 if running locally
+SETTLE=https://revoke-settle-xtql.onrender.com   # or http://localhost:5000
 ```
 
 ---

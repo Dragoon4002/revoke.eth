@@ -1,0 +1,47 @@
+# Render blueprint — deploys index (:4000-equiv) + settle (:5000-equiv) as public services.
+# Both run the whole monorepo via pnpm workspace filter (settle imports @revoke/index in-process).
+# Secrets (sync:false) MUST be set in the Render dashboard per service — see VERIFY.md.
+#
+# Free tier spins DOWN on idle → first request after idle cold-starts (~30-60s). Warm before demo.
+services:
+  - type: web
+    name: revoke-index
+    runtime: node
+    plan: free
+    rootDir: .
+    buildCommand: corepack enable && pnpm install --frozen-lockfile
+    startCommand: pnpm --filter @revoke/index start
+    envVars:
+      # Preferred (no rate limit): set GRAPH_API_KEY + GRAPH_SUBGRAPH_ID → gateway URL built automatically.
+      - key: GRAPH_API_KEY
+        sync: false   # thegraph.com/studio → API Keys
+      - key: GRAPH_SUBGRAPH_ID
+        sync: false   # published subgraph deployment id (Qm... / 0x...)
+      # Fallback: Studio query URL (free, 429s under load) — used if the two above are unset.
+      - key: GRAPH_QUERY_URL
+        sync: false   # https://api.studio.thegraph.com/query/1760021/revoke-ens/v0.0.2
+      - key: SEPOLIA_RPC_URL
+        sync: false   # chain-head lookup for provenance freshness
+
+  - type: web
+    name: revoke-settle
+    runtime: node
+    plan: free
+    rootDir: .
+    buildCommand: corepack enable && pnpm install --frozen-lockfile
+    startCommand: pnpm --filter @revoke/settle start
+    envVars:
+      - key: GRAPH_QUERY_URL
+        sync: false   # settle queries the subgraph in-process via @revoke/index
+      - key: SEPOLIA_RPC_URL
+        sync: false
+      - key: HEDERA_TOPIC_ID
+        sync: false   # 0.0.10456766
+      - key: HEDERA_ACCOUNT_ID
+        sync: false   # 0.0.10442951
+      - key: HEDERA_PRIVATE_KEY
+        sync: false   # ECDSA operator key
+      - key: X402_AMOUNT
+        sync: false   # optional; defaults 1000000
+      - key: X402_TOKEN_ADDRESS
+        sync: false   # optional

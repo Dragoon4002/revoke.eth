@@ -9,6 +9,7 @@
   "scripts": {
     "test": "vitest run",
     "dev": "node --env-file=../../.env --import tsx/esm src/server.ts",
+    "start": "node --import tsx/esm src/server.ts",
     "mcp": "node --import tsx/esm src/mcp.ts",
     "subgraph:codegen": "cd subgraph && node_modules/.bin/graph codegen",
     "subgraph:build": "cd subgraph && node_modules/.bin/graph build",

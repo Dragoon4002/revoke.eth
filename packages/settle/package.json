@@ -8,7 +8,8 @@
   },
   "scripts": {
     "test": "vitest run",
-    "dev": "node --env-file=../../.env --import tsx/esm src/server.ts"
+    "dev": "node --env-file=../../.env --import tsx/esm src/server.ts",
+    "start": "node --import tsx/esm src/server.ts"
   },
   "dependencies": {
     "@hashgraph/sdk": "^2.81.0",

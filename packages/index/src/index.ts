@@ -3,8 +3,15 @@ import { keccak256, toBytes } from "viem";
 
 // ── Config ────────────────────────────────────────────────────────────────────
 
+// Gateway path (no rate limit) if key+id set; else Studio (free, aggressively 429s).
+const GATEWAY_URL =
+  process.env.GRAPH_API_KEY && process.env.GRAPH_SUBGRAPH_ID
+    ? `https://gateway.thegraph.com/api/${process.env.GRAPH_API_KEY}/subgraphs/id/${process.env.GRAPH_SUBGRAPH_ID}`
+    : undefined;
+
 const SUBGRAPH_URL =
   process.env.SUBGRAPH_URL ??
+  GATEWAY_URL ??
   process.env.GRAPH_QUERY_URL ??
   "https://rpc.sepolia.org"; // placeholder — set SUBGRAPH_URL or GRAPH_QUERY_URL
 

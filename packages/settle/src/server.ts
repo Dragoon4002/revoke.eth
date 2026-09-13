@@ -1,8 +1,10 @@
 import { Hono } from "hono";
+import { cors } from "hono/cors";
 import { serve } from "@hono/node-server";
 import { handleRequest } from "./index.js";
 
 const app = new Hono();
+app.use("*", cors({ origin: "*" }));
 
 // ponytail: thin HTTP adapter over handleRequest — keeps core logic testable without Hono
 app.get("/service/:endpoint", async (c) => {

@@ -82,8 +82,8 @@ CapabilityRegistry.revokeCapability() on Sepolia
 **Prerequisites:** Node 22, pnpm 9+
 
 ```sh
-git clone <repo>
-cd Revoke
+git clone https://github.com/Dragoon4002/revoke.eth.git
+cd revoke.eth
 cp .env.example .env   # fill in values below
 pnpm install
 pnpm -r test           # 30/30 unit tests

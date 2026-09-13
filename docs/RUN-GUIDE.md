@@ -60,8 +60,8 @@ curl -s "https://testnet.mirrornode.hedera.com/api/v1/topics/0.0.10456766/messag
 ### Clone + install
 
 ```bash
-git clone <repo-url> Revoke
-cd Revoke
+git clone https://github.com/Dragoon4002/revoke.eth.git
+cd revoke.eth
 cp .env.example .env      # fill values (see table below)
 pnpm install
 pnpm -r test              # sanity: 30/30 unit tests

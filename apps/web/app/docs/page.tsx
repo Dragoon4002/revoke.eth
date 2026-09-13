@@ -36,7 +36,7 @@ export default function Docs() {
           </p>
           <p className="text-sm text-muted">
             Want to verify the live claims without installing anything?{" "}
-            <a href="https://github.com/Dragoon4002/Revoke/blob/main/docs/VERIFY.md"
+            <a href="https://github.com/Dragoon4002/revoke.eth/blob/main/docs/VERIFY.md"
                target="_blank" rel="noopener noreferrer"
                className="text-accent hover:text-accent-hover underline">
               See VERIFY.md
@@ -70,8 +70,8 @@ export default function Docs() {
 
         {/* Install */}
         <Section title="Install" step="03">
-          <Code>{`git clone https://github.com/Dragoon4002/Revoke
-cd Revoke
+          <Code>{`git clone https://github.com/Dragoon4002/revoke.eth.git
+cd revoke.eth
 pnpm install`}</Code>
           <p className="text-sm text-muted mt-4">
             Copy the env template and fill in your keys. The defaults already point at the live
